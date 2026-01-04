@@ -71,7 +71,7 @@ fun SettingsPage(
                 ) {
                     Icon(
                         imageVector = if (isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode,
-                        contentDescription = "Motyw",
+                        contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Column {
@@ -129,7 +129,7 @@ fun SettingsPage(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Language,
-                        contentDescription = "Language",
+                        contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Column {

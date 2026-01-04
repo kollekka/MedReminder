@@ -100,7 +100,7 @@ fun AppointmentPage(
             } else if (filteredAppointments.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        if (showHistory) "No completed appointments." else "No scheduled appointments.",
+                        if (showHistory) stringResource(R.string.appointments_no_completed) else stringResource(R.string.appointments_no_scheduled),
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -166,176 +166,298 @@ private fun AppointmentItem(
 ) {
     val daysUntil = TimeUnit.MILLISECONDS.toDays(appointment.dateTime - System.currentTimeMillis())
     val isUrgent = daysUntil < 3 && daysUntil >= 0
-    val iconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+    val isPast = appointment.dateTime < System.currentTimeMillis()
+
+    // Kolor paska bocznego zależny od stanu
+    val accentColor = when {
+        appointment.completed -> MaterialTheme.colorScheme.outline
+        isUrgent -> MaterialTheme.colorScheme.tertiary
+        isPast -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.secondary
+    }
 
     // Stan rozwinięcia karty
     var isExpanded by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primaryContainer)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column {
+        Row {
+            // Kolorowy pasek boczny
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .clickable { isExpanded = !isExpanded }
-                    .padding(horizontal = 16.dp, vertical = 6.dp)
-            ) {
-                Text(
-                    text = appointment.name,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(end = 120.dp)
-                )
-
-                Row(
-                    modifier = Modifier.align(Alignment.CenterEnd),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (isUrgent) {
-                        Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = "Wizyta się zbliża!",
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-
-                    // Ikona powiadomień
-                    Icon(
-                        imageVector = if (appointment.reminderEnabled) Icons.Default.Notifications else Icons.Default.NotificationsOff,
-                        contentDescription = "Status przypomnienia",
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(28.dp)
+                    .width(4.dp)
+                    .background(accentColor)
+                    .align(Alignment.CenterVertically)
+                    .then(
+                        if (isExpanded) Modifier.fillMaxHeight()
+                        else Modifier.height(56.dp)
                     )
+            )
 
-                    // Ikona strzałki
-                    Icon(
-                        imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = if (isExpanded) "Zwiń" else "Rozwiń",
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-            }
-
-            // Sekcja środkowa - zwijalna, klikalna do edycji
-            AnimatedVisibility(visible = isExpanded) {
+            Column(modifier = Modifier.weight(1f)) {
+                // Nagłówek - klikalny do zwijania/rozwijania
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onClick() }
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        .clickable { isExpanded = !isExpanded }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Lewa kolumna - informacje
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.CalendarToday, contentDescription = "Data wizyty", tint = iconColor)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(text = formatDate(appointment.dateTime), fontSize = 20.sp, fontWeight = FontWeight.Medium)
-                                Text(text = formatTimeOnly(appointment.dateTime), fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-                            }
-                        }
-
-                        if (appointment.location.isNotEmpty()) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.LocationOn, contentDescription = "Lokalizacja", tint = iconColor)
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(text = appointment.location, fontSize = 18.sp)
-                            }
-                        }
-                    }
-
-                    // Prawa strona - ikona i notatki
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.LocalHospital,
-                            contentDescription = "Lekarz",
-                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                            modifier = Modifier.size(120.dp)
+                        Text(
+                            text = appointment.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
-                        if (appointment.notes.isNotEmpty()) {
-                            var showNotesDialog by remember { mutableStateOf(false) }
+                        if (isUrgent && !appointment.completed) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
 
-                            OutlinedButton(
-                                onClick = { showNotesDialog = true },
-                                modifier = Modifier.width(120.dp),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                Icon(Icons.Default.Notes, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text(stringResource(R.string.notes_title), fontSize = 12.sp)
-                            }
-
-                            if (showNotesDialog) {
-                                AlertDialog(
-                                    onDismissRequest = { showNotesDialog = false },
-                                    title = {
-                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            Icon(Icons.Default.Notes, contentDescription = null)
-                                            Text("${stringResource(R.string.notes_title)} - ${appointment.name}")
-                                        }
-                                    },
-                                    text = { Text(text = appointment.notes, style = MaterialTheme.typography.bodyLarge) },
-                                    confirmButton = {
-                                        TextButton(onClick = { showNotesDialog = false }) { Text(stringResource(R.string.close)) }
-                                    }
-                                )
-                            }
+                        if (appointment.completed) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     }
-                }
-            }
 
-            // Przyciski akcji - stopka
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onMarkCompleted,
-                    modifier = Modifier.weight(1f),
-                    enabled = !appointment.completed,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.primary,
-                        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                    )
-                ) {
-                    Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        if (appointment.completed) stringResource(R.string.appointments_completed) else stringResource(R.string.appointments_mark_as_done),
-                        fontSize = 13.sp
-                    )
+                    // Ikony po prawej stronie
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Ikona powiadomień
+                        Icon(
+                            imageVector = if (appointment.reminderEnabled) Icons.Default.Notifications else Icons.Default.NotificationsOff,
+                            contentDescription = null,
+                            tint = if (appointment.reminderEnabled)
+                                MaterialTheme.colorScheme.secondary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+
+                        // Ikona strzałki
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = if (isExpanded) stringResource(R.string.collapse) else stringResource(R.string.expand),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
 
-                OutlinedButton(
-                    onClick = onDelete,
-                    modifier = Modifier.weight(0.8f),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                // Sekcja środkowa - zwijalna, klikalna do edycji
+                AnimatedVisibility(visible = isExpanded) {
+                    Column {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onClick() }
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            // Lewa kolumna - informacje
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                // Data i godzina
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Default.CalendarToday,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.secondary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = formatDate(appointment.dateTime),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = formatTimeOnly(appointment.dateTime),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+
+                                // Lokalizacja
+                                if (appointment.location.isNotEmpty()) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Default.LocationOn,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text(
+                                            text = appointment.location,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+
+                                // Dni do wizyty
+                                if (!appointment.completed && !isPast) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Default.Schedule,
+                                            contentDescription = null,
+                                            tint = if (isUrgent) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text(
+                                            text = when {
+                                                daysUntil == 0L -> stringResource(R.string.home_today)
+                                                daysUntil == 1L -> stringResource(R.string.home_tomorrow)
+                                                else -> "$daysUntil ${stringResource(R.string.home_days)}"
+                                            },
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = if (isUrgent) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Prawa strona - notatki
+                            if (appointment.notes.isNotEmpty()) {
+                                var showNotesDialog by remember { mutableStateOf(false) }
+
+                                OutlinedButton(
+                                    onClick = { showNotesDialog = true },
+                                    modifier = Modifier.align(Alignment.Top),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                                ) {
+                                    Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(stringResource(R.string.notes_title), style = MaterialTheme.typography.labelMedium)
+                                }
+
+                                if (showNotesDialog) {
+                                    AlertDialog(
+                                        onDismissRequest = { showNotesDialog = false },
+                                        title = {
+                                            Text("${stringResource(R.string.notes_title)} - ${appointment.name}")
+                                        },
+                                        text = {
+                                            Text(
+                                                text = appointment.notes,
+                                                style = MaterialTheme.typography.bodyLarge
+                                            )
+                                        },
+                                        confirmButton = {
+                                            TextButton(onClick = { showNotesDialog = false }) {
+                                                Text(stringResource(R.string.close))
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+
+                        // Przyciski akcji - stopka
+                        var showDeleteDialog by remember { mutableStateOf(false) }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Button(
+                                onClick = onMarkCompleted,
+                                modifier = Modifier.weight(1f),
+                                enabled = !appointment.completed
+                            ) {
+                                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    if (appointment.completed) stringResource(R.string.appointments_completed)
+                                    else stringResource(R.string.appointments_mark_as_done)
+                                )
+                            }
+
+                            OutlinedButton(
+                                onClick = { showDeleteDialog = true },
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                            }
+                        }
+
+                        // Dialog potwierdzenia usunięcia
+                        if (showDeleteDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showDeleteDialog = false },
+                                icon = {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                },
+                                title = {
+                                    Text(stringResource(R.string.appointment_delete_title))
+                                },
+                                text = {
+                                    Text(stringResource(R.string.appointment_delete_message, appointment.name))
+                                },
+                                confirmButton = {
+                                    Button(
+                                        onClick = {
+                                            onDelete()
+                                            showDeleteDialog = false
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                    ) {
+                                        Text(stringResource(R.string.appointment_delete_confirm))
+                                    }
+                                },
+                                dismissButton = {
+                                    OutlinedButton(onClick = { showDeleteDialog = false }) {
+                                        Text(stringResource(R.string.cancel))
+                                    }
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }

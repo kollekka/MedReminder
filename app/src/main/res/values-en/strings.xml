@@ -9,9 +9,14 @@
 
     <!-- Home Page -->
     <string name="home_welcome">Welcome!</string>
+    <string name="home_welcome_subtitle">How are you feeling today?</string>
+    <string name="home_greeting_morning">Good morning!</string>
+    <string name="home_greeting_afternoon">Good afternoon!</string>
+    <string name="home_greeting_evening">Good evening!</string>
+    <string name="home_greeting_night">Good night!</string>
     <string name="home_overview">Overview</string>
     <string name="home_statistics">Statistics</string>
-    <string name="home_active_medications">Active medications</string>
+    <string name="home_active_medications">Available medications</string>
     <string name="home_upcoming_appointments">Upcoming appointments</string>
     <string name="home_medications_today">Medications today</string>
     <string name="home_next_appointment">Next appointment</string>
@@ -55,10 +60,12 @@
     <string name="medications_current">Current</string>
     <string name="medications_history">History</string>
     <string name="medications_empty">Empty</string>
+    <string name="medications_no_empty">No empty medications.</string>
+    <string name="medications_no_added">No medications added.</string>
     <string name="medications_add">Add medication</string>
     <string name="medications_edit">Edit medication</string>
     <string name="medications_delete">Delete</string>
-    <string name="medications_mark_taken">Mark as taken</string>
+    <string name="medications_mark_taken">Take</string>
     <string name="medications_refill">Refill</string>
     <string name="medications_view_notes">View notes</string>
     <string name="medications_low_stock">Running low!</string>
@@ -152,6 +159,8 @@
     <string name="close">Close</string>
     <string name="select">Select</string>
     <string name="confirm">Confirm</string>
+    <string name="expand">Expand</string>
+    <string name="collapse">Collapse</string>
 
     <!-- Validation -->
     <string name="error_empty_field">This field cannot be empty</string>
@@ -172,5 +181,18 @@
     <string name="notes_title">Notes</string>
     <string name="notes_empty">No notes</string>
     <string name="notes_edit">Edit notes</string>
+
+    <!-- Medication Dialogs -->
+    <string name="medication_delete_title">Delete medication?</string>
+    <string name="medication_delete_message">Are you sure you want to delete \"%s\"?</string>
+    <string name="medication_delete_confirm">Yes, delete</string>
+    <string name="medication_notifications_disable_title">Disable notifications?</string>
+    <string name="medication_notifications_disable_message">Are you sure you want to disable notifications for \"%s\"?</string>
+    <string name="medication_notifications_disable_confirm">Yes, disable</string>
+
+    <!-- Appointment Dialogs -->
+    <string name="appointment_delete_title">Delete appointment?</string>
+    <string name="appointment_delete_message">Are you sure you want to delete \"%s\"?</string>
+    <string name="appointment_delete_confirm">Yes, delete</string>
 </resources>
 

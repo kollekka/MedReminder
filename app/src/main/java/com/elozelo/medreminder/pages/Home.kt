@@ -1,9 +1,12 @@
 package com.elozelo.medreminder.pages
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -45,13 +48,22 @@ fun HomePage(
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)
-            .padding(top = 16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
+        // Sekcja powitalna
         WelcomeSection()
 
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Dashboard Grid - szybki podgląd statystyk
+        DashboardGrid(
+            medications = medications,
+            appointments = appointments,
+            onNavigateToMedications = onNavigateToMedications,
+            onNavigateToAppointments = onNavigateToAppointments
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -76,36 +88,68 @@ fun HomePage(
 
 @Composable
 private fun WelcomeSection() {
+    val calendar = Calendar.getInstance()
+    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+
+    // Powitanie zależne od pory dnia
+    val greeting = when {
+        hour < 6 -> stringResource(R.string.home_greeting_night)
+        hour < 12 -> stringResource(R.string.home_greeting_morning)
+        hour < 18 -> stringResource(R.string.home_greeting_afternoon)
+        else -> stringResource(R.string.home_greeting_evening)
+    }
+
+    // Ikona zależna od pory dnia
+    val icon = when {
+        hour < 6 -> Icons.Default.NightsStay
+        hour < 12 -> Icons.Default.WbSunny
+        hour < 18 -> Icons.Default.WbSunny
+        else -> Icons.Default.NightsStay
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-        colors = CardDefaults.cardElevation(defaultElevation = 4.dp).let {
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
-        }
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
         Row(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.FavoriteBorder,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(32.dp)
-            )
+            // Ikona w kółku
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.width(16.dp))
+
             Column {
                 Text(
-                    text = stringResource(R.string.home_welcome),
+                    text = greeting,
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = stringResource(R.string.home_overview),
+                    text = stringResource(R.string.home_welcome_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                 )
@@ -114,6 +158,137 @@ private fun WelcomeSection() {
     }
 }
 
+@Composable
+private fun DashboardGrid(
+    medications: List<Medication>,
+    appointments: List<Appointment>,
+    onNavigateToMedications: () -> Unit,
+    onNavigateToAppointments: () -> Unit
+) {
+    val todayMedications = getMedicationsForTodaySorted(medications)
+    val upcomingAppointments = appointments.filter { it.dateTime > System.currentTimeMillis() && !it.completed }
+    val lowStockMedications = medications.filter { it.remainingQuantity <= 5 && it.remainingQuantity > 0 }
+    val allTaken = areAllTodayMedicationsTaken(medications)
+
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Pierwszy rząd
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Leki dzisiaj
+            DashboardCard(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.home_medications_today),
+                value = if (allTaken) "✓" else todayMedications.size.toString(),
+                icon = Icons.Default.Medication,
+                color = if (allTaken) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
+                onClick = onNavigateToMedications
+            )
+
+            // Nadchodzące wizyty
+            DashboardCard(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.home_upcoming_appointments),
+                value = upcomingAppointments.size.toString(),
+                icon = Icons.Default.Event,
+                color = MaterialTheme.colorScheme.secondary,
+                onClick = onNavigateToAppointments
+            )
+        }
+
+        // Drugi rząd
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Aktywne leki
+            DashboardCard(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.home_active_medications),
+                value = medications.filter { it.remainingQuantity > 0 }.size.toString(),
+                icon = Icons.Default.Inventory,
+                color = MaterialTheme.colorScheme.primary,
+                onClick = onNavigateToMedications
+            )
+
+            // Kończące się leki
+            DashboardCard(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.home_low_stock_medications),
+                value = lowStockMedications.size.toString(),
+                icon = Icons.Default.Warning,
+                color = if (lowStockMedications.isNotEmpty()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
+                onClick = onNavigateToMedications
+            )
+        }
+    }
+}
+
+@Composable
+private fun DashboardCard(
+    modifier: Modifier = Modifier,
+    title: String,
+    value: String,
+    icon: ImageVector,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = modifier
+            .height(100.dp)
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Kolorowa ikona
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        color = color.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = color
+                )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2
+                )
+            }
+        }
+    }
+}
 
 @Composable
 private fun TodayMedicationsSection(
@@ -123,25 +298,13 @@ private fun TodayMedicationsSection(
     onNavigateToMedications: () -> Unit
 ) {
     val todayMedications = getMedicationsForTodaySorted(medications)
+    val hasAnyMedications = medications.any { it.remainingQuantity > 0 }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = stringResource(R.string.home_medications_today),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-        if (todayMedications.isNotEmpty()) {
-            TextButton(onClick = onNavigateToMedications) {
-                Text(stringResource(R.string.home_view_all))
-            }
-        }
-    }
+    SectionHeader(
+        title = stringResource(R.string.home_medications_today),
+        showViewAll = hasAnyMedications,
+        onViewAllClick = onNavigateToMedications
+    )
 
     Spacer(modifier = Modifier.height(8.dp))
 
@@ -155,7 +318,6 @@ private fun TodayMedicationsSection(
             CircularProgressIndicator()
         }
     } else if (todayMedications.isEmpty() && areAllTodayMedicationsTaken(medications)) {
-        // Wszystkie leki zostały wzięte
         EmptyStateCard(
             icon = Icons.Default.CheckCircle,
             message = stringResource(R.string.home_all_medications_taken),
@@ -180,68 +342,118 @@ private fun TodayMedicationsSection(
 }
 
 @Composable
+private fun SectionHeader(
+    title: String,
+    showViewAll: Boolean,
+    onViewAllClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge
+        )
+        if (showViewAll) {
+            TextButton(onClick = onViewAllClick) {
+                Text(stringResource(R.string.home_view_all))
+            }
+        }
+    }
+}
+
+@Composable
 private fun MedicationTodayCard(medication: Medication, medicationViewModel: MedicationViewModel) {
     var showConfirmDialog by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier.width(200.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        modifier = Modifier.width(180.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Healing,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = medication.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "${medication.quantity} ${medication.dosage.getLocalizedName(androidx.compose.ui.platform.LocalContext.current)}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+        Row {
+            // Niebieski pasek boczny
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(140.dp)
+                    .background(MaterialTheme.colorScheme.primary)
             )
 
-            if (medication.reminderTimes.isNotEmpty()) {
-                val nextTime = getNextReminderTime(medication)
-                if (nextTime != null) {
-                    Spacer(modifier = Modifier.height(4.dp))
+            Column(
+                modifier = Modifier.padding(12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = RoundedCornerShape(8.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Medication,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "${stringResource(R.string.home_next_dose)}: $nextTime",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
+                        text = medication.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 1,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = { showConfirmDialog = true },
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(vertical = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
+                Text(
+                    text = "${medication.quantity} ${medication.dosage.getLocalizedName(androidx.compose.ui.platform.LocalContext.current)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(stringResource(R.string.home_take_medication))
+
+                if (medication.reminderTimes.isNotEmpty()) {
+                    val nextTime = getNextReminderTime(medication)
+                    if (nextTime != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "${stringResource(R.string.home_next_dose)}: $nextTime",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = { showConfirmDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(vertical = 6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        stringResource(R.string.home_take_medication),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
             }
         }
     }
@@ -249,18 +461,54 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
     if (showConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
-            title = { Text(medication.name) },
-            text = { Text(stringResource(R.string.home_confirm_take_medication)) },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(20.dp),
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Medication,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    medication.name,
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            text = {
+                Text(
+                    stringResource(R.string.home_confirm_take_medication),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
             confirmButton = {
-                TextButton(onClick = {
-                    medicationViewModel.markMedicationTaken(medication)
-                    showConfirmDialog = false
-                }) {
+                Button(
+                    onClick = {
+                        medicationViewModel.markMedicationTaken(medication)
+                        showConfirmDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.home_yes))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirmDialog = false }) {
+                OutlinedButton(onClick = { showConfirmDialog = false }) {
                     Text(stringResource(R.string.home_no))
                 }
             }
@@ -271,28 +519,15 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
 @Composable
 private fun UpcomingAppointmentsSection(appointments: List<Appointment>, isLoading: Boolean, onNavigateToAppointments: () -> Unit) {
     val upcomingAppointments = appointments
-        .filter { it.dateTime > System.currentTimeMillis() }
+        .filter { it.dateTime > System.currentTimeMillis() && !it.completed }
         .sortedBy { it.dateTime }
         .take(3)
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = stringResource(R.string.home_upcoming_appointments),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-        if (upcomingAppointments.isNotEmpty()) {
-            TextButton(onClick = onNavigateToAppointments) {
-                Text(stringResource(R.string.home_view_all))
-            }
-        }
-    }
+    SectionHeader(
+        title = stringResource(R.string.home_upcoming_appointments),
+        showViewAll = true,
+        onViewAllClick = onNavigateToAppointments
+    )
 
     Spacer(modifier = Modifier.height(8.dp))
 
@@ -325,60 +560,97 @@ private fun UpcomingAppointmentsSection(appointments: List<Appointment>, isLoadi
 
 @Composable
 private fun AppointmentCard(appointment: Appointment) {
+    val daysUntil = ((appointment.dateTime - System.currentTimeMillis()) / (1000 * 60 * 60 * 24)).toInt()
+    val isUrgent = daysUntil < 3
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Event,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.size(24.dp)
+        Row {
+            // Kolorowy pasek boczny
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(72.dp)
+                    .background(
+                        if (isUrgent) MaterialTheme.colorScheme.tertiary
+                        else MaterialTheme.colorScheme.secondary
+                    )
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = appointment.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = formatAppointmentDate(appointment.dateTime),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (appointment.location.isNotEmpty()) {
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Ikona
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shape = RoundedCornerShape(10.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Event,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = appointment.location,
+                        text = appointment.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = formatAppointmentDate(appointment.dateTime),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    if (appointment.location.isNotEmpty()) {
+                        Text(
+                            text = appointment.location,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Dni do wizyty
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = getDaysUntilAppointment(appointment.dateTime),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (isUrgent) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
+                    )
                 }
             }
-            Text(
-                text = getDaysUntilAppointment(appointment.dateTime),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium
-            )
         }
     }
 }
 
 @Composable
 private fun LowStockMedicationsSection(medications: List<Medication>) {
-    val lowStockMedications = medications.filter { it.remainingQuantity <= 5 }
+    val lowStockMedications = medications.filter { it.remainingQuantity <= 5 && it.remainingQuantity > 0 }
 
     if (lowStockMedications.isNotEmpty()) {
         Text(
             text = stringResource(R.string.home_low_stock_medications),
             style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
@@ -398,40 +670,59 @@ private fun LowStockMedicationsSection(medications: List<Medication>) {
 @Composable
 private fun LowStockCard(medication: Medication) {
     Card(
-        modifier = Modifier.width(160.dp),
+        modifier = Modifier.width(150.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+        Row {
+            // Czerwony pasek boczny
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(80.dp)
+                    .background(MaterialTheme.colorScheme.error)
+            )
+
+            Column(
+                modifier = Modifier.padding(12.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Warning,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                shape = RoundedCornerShape(8.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = medication.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 1,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
-                    text = medication.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1
+                    text = "${stringResource(R.string.home_remaining)}: ${medication.remainingQuantity}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
                 )
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "${stringResource(R.string.home_remaining)}: ${medication.remainingQuantity}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onErrorContainer
-            )
         }
     }
 }
@@ -446,7 +737,9 @@ private fun EmptyStateCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -454,12 +747,22 @@ private fun EmptyStateCard(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = color,
-                modifier = Modifier.size(48.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(
+                        color = color.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = message,

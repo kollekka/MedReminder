@@ -3,6 +3,8 @@ package com.elozelo.medreminder.ui.components
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.elozelo.medreminder.R
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -42,12 +44,12 @@ fun DatePickerDialog(
                     onDismiss()
                 }
             ) {
-                Text("OK")
+                Text(stringResource(R.string.ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Anuluj")
+                Text(stringResource(R.string.cancel))
             }
         }
     ) {
@@ -81,12 +83,12 @@ fun TimePickerDialog(
                     onDismiss()
                 }
             ) {
-                Text("OK")
+                Text(stringResource(R.string.ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Anuluj")
+                Text(stringResource(R.string.cancel))
             }
         },
         text = {

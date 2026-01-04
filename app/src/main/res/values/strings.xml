@@ -9,9 +9,14 @@
 
     <!-- Home Page -->
     <string name="home_welcome">Witaj!</string>
+    <string name="home_welcome_subtitle">Jak się dzisiaj czujesz?</string>
+    <string name="home_greeting_morning">Dzień dobry!</string>
+    <string name="home_greeting_afternoon">Miłego popołudnia!</string>
+    <string name="home_greeting_evening">Dobry wieczór!</string>
+    <string name="home_greeting_night">Dobrej nocy!</string>
     <string name="home_overview">Przegląd</string>
     <string name="home_statistics">Statystyki</string>
-    <string name="home_active_medications">Aktywne leki</string>
+    <string name="home_active_medications">Dostępne leki</string>
     <string name="home_upcoming_appointments">Nadchodzące wizyty</string>
     <string name="home_medications_today">Leki dzisiaj</string>
     <string name="home_next_appointment">Następna wizyta</string>
@@ -55,10 +60,12 @@
     <string name="medications_current">Aktualne</string>
     <string name="medications_history">Historia</string>
     <string name="medications_empty">Puste</string>
+    <string name="medications_no_empty">Brak pustych leków.</string>
+    <string name="medications_no_added">Brak dodanych leków.</string>
     <string name="medications_add">Dodaj lek</string>
     <string name="medications_edit">Edytuj lek</string>
     <string name="medications_delete">Usuń</string>
-    <string name="medications_mark_taken">Wzięto lek</string>
+    <string name="medications_mark_taken">Weź</string>
     <string name="medications_refill">Uzupełnij</string>
     <string name="medications_view_notes">Pokaż notatki</string>
     <string name="medications_low_stock">Lek się kończy!</string>
@@ -153,6 +160,8 @@
     <string name="close">Zamknij</string>
     <string name="select">Wybierz</string>
     <string name="confirm">Potwierdź</string>
+    <string name="expand">Rozwiń</string>
+    <string name="collapse">Zwiń</string>
 
     <!-- Validation -->
     <string name="error_empty_field">To pole nie może być puste</string>
@@ -173,4 +182,17 @@
     <string name="notes_title">Notatki</string>
     <string name="notes_empty">Brak notatek</string>
     <string name="notes_edit">Edytuj notatki</string>
+
+    <!-- Medication Dialogs -->
+    <string name="medication_delete_title">Usunąć lek?</string>
+    <string name="medication_delete_message">Czy na pewno chcesz usunąć lek \"%s\"?</string>
+    <string name="medication_delete_confirm">Tak, usuń</string>
+    <string name="medication_notifications_disable_title">Wyłączyć powiadomienia?</string>
+    <string name="medication_notifications_disable_message">Czy na pewno chcesz wyłączyć powiadomienia dla leku \"%s\"?</string>
+    <string name="medication_notifications_disable_confirm">Tak, wyłącz</string>
+
+    <!-- Appointment Dialogs -->
+    <string name="appointment_delete_title">Usunąć wizytę?</string>
+    <string name="appointment_delete_message">Czy na pewno chcesz usunąć wizytę \"%s\"?</string>
+    <string name="appointment_delete_confirm">Tak, usuń</string>
 </resources>

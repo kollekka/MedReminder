@@ -14,59 +14,67 @@ import androidx.compose.ui.platform.LocalContext
 private val DarkColorScheme = darkColorScheme(
     primary = MedicalBlueDark,
     onPrimary = MedicalDarkBg,
-    primaryContainer = MedicalLightBlue,
-    onPrimaryContainer = Color.Black,
+    primaryContainer = Color(0xFF1E3A5F),
+    onPrimaryContainer = MedicalBlueDark,
 
     secondary = MedicalTealDark,
     onSecondary = MedicalDarkBg,
-    secondaryContainer = MedicalMintDark,
-    onSecondaryContainer = MedicalDarkBg,
+    secondaryContainer = Color(0xFF1E3D3B),
+    onSecondaryContainer = MedicalTealDark,
 
-    tertiary = Color(0xFF1A73E8),
+    tertiary = WarmOrangeDark,
     onTertiary = MedicalDarkBg,
+    tertiaryContainer = Color(0xFF3D2E1E),
+    onTertiaryContainer = WarmOrangeDark,
 
     background = MedicalDarkBg,
     onBackground = MedicalWhite,
     surface = MedicalDarkSurface,
     onSurface = MedicalWhite,
 
-    surfaceVariant = Color(0xFF2C2C2C),
-    onSurfaceVariant = MedicalLightBlue,
+    surfaceVariant = MedicalDarkCard,
+    onSurfaceVariant = Color(0xFFB0B0B0),
 
-    outline = MedicalBlueDark,
+    outline = Color(0xFF404040),
+    outlineVariant = Color(0xFF303030),
 
     error = Color(0xFFCF6679),
-    onError = MedicalDarkBg
+    onError = MedicalDarkBg,
+    errorContainer = Color(0xFF3D1E1E),
+    onErrorContainer = Color(0xFFCF6679)
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = MedicalBlue,
     onPrimary = Color.White,
     primaryContainer = MedicalLightBlue,
-    onPrimaryContainer = Color.Black,
+    onPrimaryContainer = Color(0xFF0D47A1),
 
     secondary = MedicalTeal,
     onSecondary = Color.White,
-    secondaryContainer = MedicalMint,
-    onSecondaryContainer = MedicalTeal,
+    secondaryContainer = Color(0xFFE0F2F1),
+    onSecondaryContainer = Color(0xFF00695C),
 
-    tertiary = Color(0xFF1A73E8),
+    tertiary = WarmOrange,
     onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFE8F5E9),
-    onTertiaryContainer = MedicalGreen,
+    tertiaryContainer = WarmOrangeLight,
+    onTertiaryContainer = Color(0xFFE65100),
 
-    background = MedicalWhite,
+    background = Color(0xFFF5F5F5),
     onBackground = Color(0xFF1C1B1F),
     surface = Color.White,
     onSurface = Color(0xFF1C1B1F),
 
-    surfaceVariant = MedicalLightBlue,
-    onSurfaceVariant = MedicalBlue,
+    surfaceVariant = Color(0xFFF0F0F0),
+    onSurfaceVariant = Color(0xFF5F5F5F),
 
-    outline = MedicalBlue,
+    outline = Color(0xFFE0E0E0),
+    outlineVariant = Color(0xFFEEEEEE),
 
-    error = Color(0xFFB00020),
-    onError = Color.White
+    error = WarmRed,
+    onError = Color.White,
+    errorContainer = WarmRedLight,
+    onErrorContainer = WarmRed
 )
 
 @Composable
