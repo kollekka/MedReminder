@@ -1,0 +1,199 @@
+<resources>
+    <string name="app_name">MedReminder</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Start</string>
+    <string name="nav_medications">Leki</string>
+    <string name="nav_appointments">Wizyty</string>
+    <string name="nav_settings">Opcje</string>
+
+    <!-- Home Page -->
+    <string name="home_welcome">Witaj!</string>
+    <string name="home_welcome_subtitle">Jak się dzisiaj czujesz?</string>
+    <string name="home_greeting_morning">Dzień dobry!</string>
+    <string name="home_greeting_afternoon">Miłego popołudnia!</string>
+    <string name="home_greeting_evening">Dobry wieczór!</string>
+    <string name="home_greeting_night">Dobrej nocy!</string>
+    <string name="home_overview">Przegląd</string>
+    <string name="home_statistics">Statystyki</string>
+    <string name="home_active_medications">Dostępne leki</string>
+    <string name="home_upcoming_appointments">Nadchodzące wizyty</string>
+    <string name="home_medications_today">Leki dzisiaj</string>
+    <string name="home_next_appointment">Następna wizyta</string>
+    <string name="home_low_stock_medications">Kończące się leki</string>
+    <string name="home_view_all">Zobacz wszystkie</string>
+    <string name="home_no_medications">Brak leków</string>
+    <string name="home_no_appointments">Brak wizyt</string>
+    <string name="home_no_medications_today">Brak leków do wzięcia dzisiaj</string>
+    <string name="home_take_medication">Weź</string>
+    <string name="home_next_dose">Następna dawka</string>
+    <string name="home_remaining">Pozostało</string>
+    <string name="home_in">za</string>
+    <string name="home_days">dni</string>
+    <string name="home_today">Dzisiaj</string>
+    <string name="home_tomorrow">Jutro</string>
+    <string name="home_all_medications_taken">Wszystkie leki dzisiaj zostały już wzięte!</string>
+    <string name="home_confirm_take_medication">Czy na pewno wziąłeś/wzięłaś ten lek?</string>
+    <string name="home_yes">Tak</string>
+    <string name="home_no">Nie</string>
+
+    <!-- Settings Page -->
+    <string name="settings_title">Opcje</string>
+    <string name="settings_appearance">WYGLĄD</string>
+    <string name="settings_language">JĘZYK</string>
+    <string name="settings_info">INFORMACJE</string>
+    <string name="settings_dark_mode">Tryb ciemny</string>
+    <string name="settings_dark_mode_enabled">Włączony</string>
+    <string name="settings_dark_mode_disabled">Wyłączony</string>
+    <string name="settings_language_option">Język aplikacji</string>
+    <string name="settings_version">Wersja aplikacji</string>
+    <string name="settings_about">O aplikacji</string>
+    <string name="settings_about_desc">MedReminder - Twój osobisty asystent zdrowia</string>
+
+    <!-- Language Selection -->
+    <string name="language_polish">Polski</string>
+    <string name="language_english">Angielski</string>
+    <string name="language_dialog_title">Wybierz język</string>
+
+    <!-- Medications Page -->
+    <string name="medications_title">Twoje Leki</string>
+    <string name="medications_current">Aktualne</string>
+    <string name="medications_history">Historia</string>
+    <string name="medications_empty">Puste</string>
+    <string name="medications_no_empty">Brak pustych leków.</string>
+    <string name="medications_no_added">Brak dodanych leków.</string>
+    <string name="medications_add">Dodaj lek</string>
+    <string name="medications_edit">Edytuj lek</string>
+    <string name="medications_delete">Usuń</string>
+    <string name="medications_mark_taken">Weź</string>
+    <string name="medications_refill">Uzupełnij</string>
+    <string name="medications_view_notes">Pokaż notatki</string>
+    <string name="medications_low_stock">Lek się kończy!</string>
+    <string name="medications_to">do:</string>
+
+    <!-- Medication Form -->
+    <string name="medication_name">Nazwa leku</string>
+    <string name="medication_dose">Dawka</string>
+    <string name="medication_quantity">Ilość</string>
+    <string name="medication_dosage_type">Rodzaj dawki</string>
+    <string name="medication_frequency">Częstotliwość</string>
+    <string name="medication_start_date">Data rozpoczęcia</string>
+    <string name="medication_end_date">Data zakończenia</string>
+    <string name="medication_time">Godzina</string>
+    <string name="medication_notes">Notatki</string>
+    <string name="medication_notes_optional">Notatki (opcjonalne)</string>
+    <string name="medication_notes_placeholder">np. przyjmować po jedzeniu</string>
+    <string name="medication_add">Dodaj lek</string>
+    <string name="medication_edit">Edytuj lek</string>
+    <string name="medication_initial_stock">Zapas początkowy</string>
+    <string name="medication_initial_stock_hint">Ile masz sztuk/tabletek</string>
+    <string name="medication_end_date_label">Koniec kuracji</string>
+    <string name="medication_select_date">Wybierz datę</string>
+    <string name="medication_reminders">Przypomnienia</string>
+    <string name="medication_add_reminder_time">Dodaj godzinę przypomnienia</string>
+    <string name="medication_field_required">Pole wymagane</string>
+
+    <!-- Dosage Types -->
+    <string name="dosage_pill">Pigułka</string>
+    <string name="dosage_tablet">Tabletka</string>
+    <string name="dosage_capsule">Kapsułka</string>
+    <string name="dosage_liquid">Płyn</string>
+    <string name="dosage_injection">Zastrzyk</string>
+    <string name="dosage_drops">Krople</string>
+    <string name="dosage_inhaler">Inhalator</string>
+    <string name="dosage_other">Inne</string>
+
+    <!-- Dosage Units -->
+    <string name="dosage_unit_mg">mg</string>
+    <string name="dosage_unit_ml">ml</string>
+    <string name="dosage_unit_pills">pigułki</string>
+    <string name="dosage_unit_tablets">tabletki</string>
+    <string name="dosage_unit_capsules">kapsułki</string>
+
+    <!-- Frequency -->
+    <string name="frequency_daily">Codziennie</string>
+    <string name="frequency_weekly">Co tydzień</string>
+    <string name="frequency_monthly">Co miesiąc</string>
+    <string name="frequency_yearly">Co rok</string>
+
+    <!-- Appointments Page -->
+    <string name="appointments_title">Wizyty</string>
+    <string name="appointments_upcoming">Nadchodzące</string>
+    <string name="appointments_history">Historia</string>
+    <string name="appointments_add">Dodaj wizytę</string>
+    <string name="appointments_edit">Edytuj wizytę</string>
+    <string name="appointments_delete">Usuń</string>
+    <string name="appointments_mark_completed">Odbyto wizytę</string>
+    <string name="appointments_view_notes">Pokaż notatki</string>
+    <string name="appointments_upcoming_alert">Wizyta się zbliża</string>
+    <string name="appointments_completed">Odbyta</string>
+    <string name="appointments_mark_as_done">Odbyto</string>
+    <string name="appointments_no_completed">Brak odbytych wizyt.</string>
+    <string name="appointments_no_scheduled">Brak zaplanowanych wizyt.</string>
+
+    <!-- Appointment Form -->
+    <string name="appointment_doctor">Lekarz</string>
+    <string name="appointment_specialty">Specjalizacja</string>
+    <string name="appointment_date">Data wizyty</string>
+    <string name="appointment_time">Godzina wizyty</string>
+    <string name="appointment_location">Lokalizacja</string>
+    <string name="appointment_notes">Notatki</string>
+    <string name="appointment_name">Nazwa wizyty</string>
+    <string name="appointment_name_placeholder">np. Kontrola kardiologiczna</string>
+    <string name="appointment_name_required">Nazwa jest wymagana</string>
+    <string name="appointment_location_optional">Miejsce (opcjonalne)</string>
+    <string name="appointment_notes_optional">Notatki (opcjonalne)</string>
+    <string name="appointment_notes_placeholder">np. zabrać wcześniejsze wyniki badań</string>
+    <string name="appointment_reminders">Przypomnienia</string>
+    <string name="appointment_add_dialog_title">Dodaj nową wizytę</string>
+    <string name="appointment_edit_dialog_title">Edytuj wizytę</string>
+    <string name="appointment_change">Zmień</string>
+
+    <!-- Common -->
+    <string name="save">Zapisz</string>
+    <string name="save_changes">Zapisz zmiany</string>
+    <string name="cancel">Anuluj</string>
+    <string name="delete">Usuń</string>
+    <string name="edit">Edytuj</string>
+    <string name="add">Dodaj</string>
+    <string name="ok">OK</string>
+    <string name="close">Zamknij</string>
+    <string name="select">Wybierz</string>
+    <string name="confirm">Potwierdź</string>
+    <string name="expand">Rozwiń</string>
+    <string name="collapse">Zwiń</string>
+
+    <!-- Validation -->
+    <string name="error_empty_field">To pole nie może być puste</string>
+    <string name="error_invalid_date">Data nie może być wcześniejsza niż dzisiaj</string>
+    <string name="error_text_too_long">Tekst jest za długi (max %d znaków)</string>
+    <string name="error_invalid_number">Wprowadź poprawną liczbę</string>
+    <string name="error_invalid_dose">Wprowadź poprawną dawkę</string>
+
+    <!-- Notifications -->
+    <string name="notification_medication_title">Przypomnienie o leku</string>
+    <string name="notification_medication_text">Czas wziąć %s</string>
+    <string name="notification_appointment_title">Przypomnienie o wizycie</string>
+    <string name="notification_appointment_text">Wizyta u %s za %d dni</string>
+    <string name="notification_low_stock_title">Niski stan leku</string>
+    <string name="notification_low_stock_text">%s się kończy. Rozważ uzupełnienie.</string>
+
+    <!-- Notes Dialog -->
+    <string name="notes_title">Notatki</string>
+    <string name="notes_empty">Brak notatek</string>
+    <string name="notes_edit">Edytuj notatki</string>
+
+    <!-- Medication Dialogs -->
+    <string name="medication_delete_title">Usunąć lek?</string>
+    <string name="medication_delete_message">Czy na pewno chcesz usunąć lek \"%s\"?</string>
+    <string name="medication_delete_confirm">Tak, usuń</string>
+    <string name="medication_notifications_disable_title">Wyłączyć powiadomienia?</string>
+    <string name="medication_notifications_disable_message">Czy na pewno chcesz wyłączyć powiadomienia dla leku \"%s\"?</string>
+    <string name="medication_notifications_disable_confirm">Tak, wyłącz</string>
+
+    <!-- Appointment Dialogs -->
+    <string name="appointment_delete_title">Usunąć wizytę?</string>
+    <string name="appointment_delete_message">Czy na pewno chcesz usunąć wizytę \"%s\"?</string>
+    <string name="appointment_delete_confirm">Tak, usuń</string>
+</resources>
+

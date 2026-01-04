@@ -13,3 +13,43 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# ========================================
+# BEZPIECZEŃSTWO - NIE COMMITUJ TYCH PLIKÓW
+# ========================================
+
+# Keystore files (klucze do podpisywania aplikacji)
+*.jks
+*.keystore
+keystore/
+keystores/
+
+# Pliki z hasłami i kluczami
+keystore.properties
+signing.properties
+*.properties.local
+secrets.properties
+
+# Google Services (zawiera API keys)
+google-services.json
+app/google-services.json
+
+# Firebase
+firebase-debug.log
+firebase-debug.*.log
+
+# Pliki release/debug build
+app/release/
+app/debug/
+*.aab
+*.apk
+
+# Pliki tymczasowe IDE
+*.log
+*.tmp
+*.temp
+
+# Pliki systemowe
+Thumbs.db
+*.bak
+

@@ -19,3 +19,22 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep DataStore Preferences classes
+-keep class androidx.datastore.** { *; }
+-keepclassmembers class * extends com.google.protobuf.GeneratedMessageLite {
+    <fields>;
+}
+
+# Keep LanguagePreferences
+-keep class com.elozelo.medreminder.utils.LanguagePreferences { *; }
+-keep class com.elozelo.medreminder.utils.LanguagePreferencesKt { *; }
+
+# Keep ViewModels
+-keep class com.elozelo.medreminder.viewmodel.** { *; }
+
+# Keep Kotlin coroutines and flow
+-keepnames class kotlinx.coroutines.** { *; }
+
+# Keep Locale related
+-keep class java.util.Locale { *; }

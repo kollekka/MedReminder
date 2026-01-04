@@ -13,10 +13,22 @@ android {
         applicationId = "com.elozelo.medreminder"
         minSdk = 23
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    androidResources {
+        // Zachowaj wszystkie zasoby językowe
+        localeFilters += listOf("pl", "en")
+    }
+
+    bundle {
+        language {
+            // Wyłącz dzielenie zasobów językowych - wszystkie języki w każdym APK
+            enableSplit = false
+        }
     }
 
     buildTypes {
@@ -43,6 +55,7 @@ android {
 dependencies {
 
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
