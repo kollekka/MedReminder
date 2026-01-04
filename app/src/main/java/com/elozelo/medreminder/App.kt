@@ -36,10 +36,8 @@ fun App(
     languageViewModel: LanguageViewModel = viewModel()
 ) {
     val selectedRoute = remember { mutableStateOf(NavRoutes.Home.route) }
-    // Obserwuj język aby wymusić rekompozycję po zmianie
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
 
-    // Użyj key(currentLanguage) aby wymusić pełną rekompozycję UI po zmianie języka
     androidx.compose.runtime.key(currentLanguage) {
         Scaffold(
             topBar = {
@@ -67,7 +65,6 @@ fun App(
                 }
             },
             bottomBar = {
-                // NavBar będzie teraz rekompozowany gdy currentLanguage się zmieni
                 NavBar(
                     selectedRoute = selectedRoute.value,
                     onChange = { selectedRoute.value = it }
