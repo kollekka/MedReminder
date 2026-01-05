@@ -15,7 +15,8 @@ class AppointmentViewModel(application: Application) : AndroidViewModel(applicat
 
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-    private val currentUser = auth.currentUser
+
+    private val currentUser get() = auth.currentUser
 
     private val _appointments = MutableStateFlow<List<Appointment>>(emptyList())
     val appointments: StateFlow<List<Appointment>> = _appointments.asStateFlow()
@@ -27,19 +28,35 @@ class AppointmentViewModel(application: Application) : AndroidViewModel(applicat
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     private val appointmentCollectionRef
-        get() = db.collection("users").document(currentUser!!.uid).collection("MyAppointments")
+        get() = currentUser?.let { user ->
+            db.collection("users").document(user.uid).collection("MyAppointments")
+        }
+
+    private var authStateListener: FirebaseAuth.AuthStateListener? = null
 
     init {
-        if (currentUser != null) {
-            fetchAppointments()
-        } else {
-            _errorMessage.value = "Błąd: Użytkownik nie jest zalogowany."
+        authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            val user = firebaseAuth.currentUser
+            if (user != null) {
+                fetchAppointments()
+            }
         }
+        auth.addAuthStateListener(authStateListener!!)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        authStateListener?.let { auth.removeAuthStateListener(it) }
     }
 
     fun fetchAppointments() {
+        val collectionRef = appointmentCollectionRef ?: run {
+            _errorMessage.value = "Błąd: Użytkownik nie jest zalogowany."
+            return
+        }
+
         _isLoading.value = true
-        appointmentCollectionRef.addSnapshotListener { snapshot, error ->
+        collectionRef.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 _errorMessage.value = "Błąd podczas ładowania wizyt: ${error.message}"
                 _isLoading.value = false
@@ -65,9 +82,12 @@ class AppointmentViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun addAppointment(appointment: Appointment) {
-        if (currentUser == null) return
+        val collectionRef = appointmentCollectionRef ?: run {
+            _errorMessage.value = "Błąd: Użytkownik nie jest zalogowany."
+            return
+        }
 
-        appointmentCollectionRef.add(appointment)
+        collectionRef.add(appointment)
             .addOnSuccessListener { documentReference ->
                 val appointmentWithId = appointment.copy(id = documentReference.id)
                 // Zaplanuj przypomnienia
@@ -79,9 +99,13 @@ class AppointmentViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun updateAppointment(appointment: Appointment) {
-        if (currentUser == null || appointment.id.isBlank()) return
+        if (appointment.id.isBlank()) return
+        val collectionRef = appointmentCollectionRef ?: run {
+            _errorMessage.value = "Błąd: Użytkownik nie jest zalogowany."
+            return
+        }
 
-        appointmentCollectionRef.document(appointment.id).set(appointment)
+        collectionRef.document(appointment.id).set(appointment)
             .addOnSuccessListener {
                 // Zaktualizuj przypomnienia
                 ReminderScheduler.scheduleAppointmentReminders(getApplication(), appointment)
@@ -92,9 +116,13 @@ class AppointmentViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun deleteAppointment(appointmentId: String) {
-        if (currentUser == null || appointmentId.isBlank()) return
+        if (appointmentId.isBlank()) return
+        val collectionRef = appointmentCollectionRef ?: run {
+            _errorMessage.value = "Błąd: Użytkownik nie jest zalogowany."
+            return
+        }
 
-        appointmentCollectionRef.document(appointmentId).delete()
+        collectionRef.document(appointmentId).delete()
             .addOnSuccessListener {
                 // Anuluj przypomnienia
                 ReminderScheduler.cancelAppointmentReminders(getApplication(), appointmentId)
@@ -105,11 +133,15 @@ class AppointmentViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun markAppointmentCompleted(appointment: Appointment) {
-        if (currentUser == null || appointment.id.isBlank()) return
+        if (appointment.id.isBlank()) return
+        val collectionRef = appointmentCollectionRef ?: run {
+            _errorMessage.value = "Błąd: Użytkownik nie jest zalogowany."
+            return
+        }
 
         val updatedAppointment = appointment.copy(completed = true)
 
-        appointmentCollectionRef.document(appointment.id).set(updatedAppointment)
+        collectionRef.document(appointment.id).set(updatedAppointment)
             .addOnFailureListener { e ->
                 _errorMessage.value = "Błąd podczas oznaczania wizyty: ${e.message}"
             }

@@ -14,42 +14,49 @@
 .cxx
 local.properties
 
-# ========================================
-# BEZPIECZEŃSTWO - NIE COMMITUJ TYCH PLIKÓW
-# ========================================
 
-# Keystore files (klucze do podpisywania aplikacji)
+
 *.jks
 *.keystore
 keystore/
 keystores/
+upload-keystore.jks
+release.keystore
+debug.keystore
 
-# Pliki z hasłami i kluczami
+
 keystore.properties
 signing.properties
 *.properties.local
 secrets.properties
+key.properties
 
-# Google Services (zawiera API keys)
+
 google-services.json
 app/google-services.json
 
-# Firebase
 firebase-debug.log
 firebase-debug.*.log
+.firebase/
 
-# Pliki release/debug build
 app/release/
 app/debug/
 *.aab
 *.apk
 
-# Pliki tymczasowe IDE
 *.log
 *.tmp
 *.temp
 
-# Pliki systemowe
+.env
+.env.local
+.env.production
+.env.development
+
+*-credentials.json
+service-account*.json
+firebase-adminsdk*.json
+
 Thumbs.db
 *.bak
 

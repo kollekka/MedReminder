@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -64,20 +65,29 @@ private fun NavBarItem(page: NavPage, modifier: Modifier = Modifier, selected: B
 
 @Composable
 fun NavBar(selectedRoute: String = NavRoutes.Home.route, onChange: (String) -> Unit) {
-    Row(
-        horizontalArrangement = Arrangement.SpaceAround,
-        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary).padding(8.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.primary)
+            .navigationBarsPadding()
     ) {
-        for (page in NavRoutes.pages) {
-            NavBarItem(
-                page = page,
-                modifier = Modifier
-                    .padding(bottom = 8.dp)
-                    .clickable{
-                        onChange(page.route)
-                    },
-                selected = selectedRoute == page.route
-            )
+        Row(
+            horizontalArrangement = Arrangement.SpaceAround,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            for (page in NavRoutes.pages) {
+                NavBarItem(
+                    page = page,
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .clickable {
+                            onChange(page.route)
+                        },
+                    selected = selectedRoute == page.route
+                )
+            }
         }
     }
 }

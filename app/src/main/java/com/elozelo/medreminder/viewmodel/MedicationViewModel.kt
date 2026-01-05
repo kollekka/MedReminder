@@ -17,7 +17,9 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
 
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-    private val currentUser = auth.currentUser
+
+
+    private val currentUser get() = auth.currentUser
 
     private val _medications = MutableStateFlow<List<Medication>>(emptyList())
     val medications: StateFlow<List<Medication>> = _medications.asStateFlow()
@@ -29,19 +31,35 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     private val medicationCollectionRef
-        get() = db.collection("users").document(currentUser!!.uid).collection("MyMeds")
+        get() = currentUser?.let { user ->
+            db.collection("users").document(user.uid).collection("MyMeds")
+        }
+
+    private var authStateListener: FirebaseAuth.AuthStateListener? = null
 
     init {
-        if (currentUser != null) {
-            fetchMedications()
-        } else {
-            _errorMessage.value = "Błąd: Użytkownik nie jest zalogowany."
+        authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            val user = firebaseAuth.currentUser
+            if (user != null) {
+                fetchMedications()
+            }
         }
+        auth.addAuthStateListener(authStateListener!!)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        authStateListener?.let { auth.removeAuthStateListener(it) }
     }
 
     private fun fetchMedications() {
+        val collectionRef = medicationCollectionRef ?: run {
+            _errorMessage.value = "Błąd: Użytkownik nie jest zalogowany."
+            return
+        }
+
         _isLoading.value = true
-        medicationCollectionRef.addSnapshotListener { snapshot, error ->
+        collectionRef.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 _errorMessage.value = "Błąd podczas ładowania leków: ${error.message}"
                 _isLoading.value = false
@@ -128,9 +146,12 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun addMedication(medication: Medication) {
-        if (currentUser == null) return
+        val collectionRef = medicationCollectionRef ?: run {
+            _errorMessage.value = "Błąd: Użytkownik nie jest zalogowany."
+            return
+        }
 
-        medicationCollectionRef.add(medication)
+        collectionRef.add(medication)
             .addOnSuccessListener { documentReference ->
                 val medicationWithId = medication.copy(id = documentReference.id)
                 // Zaplanuj przypomnienia
@@ -142,9 +163,13 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun updateMedication(medication: Medication) {
-        if (currentUser == null || medication.id.isBlank()) return
+        if (medication.id.isBlank()) return
+        val collectionRef = medicationCollectionRef ?: run {
+            _errorMessage.value = "Błąd: Użytkownik nie jest zalogowany."
+            return
+        }
 
-        medicationCollectionRef.document(medication.id).set(medication)
+        collectionRef.document(medication.id).set(medication)
             .addOnSuccessListener {
                 // Zaktualizuj przypomnienia
                 MedicationReminderScheduler.scheduleMedicationReminders(getApplication(), medication)
@@ -155,8 +180,13 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun deleteMedication(medicationId: String) {
-        if (currentUser == null || medicationId.isBlank()) return
-        medicationCollectionRef.document(medicationId).delete()
+        if (medicationId.isBlank()) return
+        val collectionRef = medicationCollectionRef ?: run {
+            _errorMessage.value = "Błąd: Użytkownik nie jest zalogowany."
+            return
+        }
+
+        collectionRef.document(medicationId).delete()
             .addOnSuccessListener {
                 // Anuluj przypomnienia
                 MedicationReminderScheduler.cancelMedicationReminders(getApplication(), medicationId)
@@ -167,7 +197,11 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun markMedicationTaken(medication: Medication) {
-        if (currentUser == null || medication.id.isBlank()) return
+        if (medication.id.isBlank()) return
+        val collectionRef = medicationCollectionRef ?: run {
+            _errorMessage.value = "Błąd: Użytkownik nie jest zalogowany."
+            return
+        }
 
         val newRemaining = (medication.remainingQuantity - medication.quantity).coerceAtLeast(0)
 
@@ -238,7 +272,7 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
             lastTakenDate = today
         )
 
-        medicationCollectionRef.document(medication.id).set(updatedMedication)
+        collectionRef.document(medication.id).set(updatedMedication)
             .addOnSuccessListener {
                 if (newRemaining == 0) {
                     MedicationReminderScheduler.cancelMedicationReminders(getApplication(), medication.id)
@@ -250,7 +284,11 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun refillMedication(medication: Medication) {
-        if (currentUser == null || medication.id.isBlank()) return
+        if (medication.id.isBlank()) return
+        val collectionRef = medicationCollectionRef ?: run {
+            _errorMessage.value = "Błąd: Użytkownik nie jest zalogowany."
+            return
+        }
 
         // Przywróć zapas do początkowej wartości i zresetuj licznik dziennych dawek
         val updatedMedication = medication.copy(
@@ -260,7 +298,7 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
             lastTakenDate = null
         )
 
-        medicationCollectionRef.document(medication.id).set(updatedMedication)
+        collectionRef.document(medication.id).set(updatedMedication)
             .addOnSuccessListener {
                 // Zaplanuj przypomnienia ponownie
                 MedicationReminderScheduler.scheduleMedicationReminders(getApplication(), updatedMedication)
