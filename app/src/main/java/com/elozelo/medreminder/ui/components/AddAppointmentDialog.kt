@@ -183,9 +183,8 @@ fun AddAppointmentDialog(
                 onClick = {
                     nameError = name.isBlank()
 
-                    // Sprawdź czy data nie jest w przeszłości (z tolerancją 1 minuty)
                     val now = System.currentTimeMillis()
-                    dateError = dateTime < now - 60000 // 1 minuta tolerancji
+                    dateError = dateTime < now - 60000
 
                     if (!nameError && !dateError) {
                         onConfirm(
@@ -218,7 +217,7 @@ fun AddAppointmentDialog(
             onDismiss = { showDatePicker = false },
             onDateSelected = {
                 appointmentDate = it
-                dateError = false // Reset błędu po wyborze nowej daty
+                dateError = false
             },
             initialDate = appointmentDate
         )
@@ -229,7 +228,7 @@ fun AddAppointmentDialog(
             onDismiss = { showTimePicker = false },
             onTimeSelected = { hour, minute ->
                 appointmentTime = Pair(hour, minute)
-                dateError = false // Reset błędu po wyborze nowej godziny
+                dateError = false
             },
             initialHour = appointmentTime.first,
             initialMinute = appointmentTime.second

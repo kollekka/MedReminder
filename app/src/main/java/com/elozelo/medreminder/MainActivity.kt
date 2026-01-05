@@ -115,6 +115,8 @@ class MainActivity : ComponentActivity() {
         val config = Configuration(resources.configuration)
         config.setLocale(locale)
 
+        config.fontScale = 1.0f
+
         resources.updateConfiguration(config, resources.displayMetrics)
     }
 
@@ -138,6 +140,8 @@ class MainActivity : ComponentActivity() {
 
         val config = Configuration(context.resources.configuration)
         config.setLocale(locale)
+
+        config.fontScale = 1.0f
 
         return context.createConfigurationContext(config)
     }

@@ -13,20 +13,18 @@ android {
         applicationId = "com.elozelo.medreminder"
         minSdk = 23
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     androidResources {
-        // Zachowaj wszystkie zasoby językowe
         localeFilters += listOf("pl", "en")
     }
 
     bundle {
         language {
-            // Wyłącz dzielenie zasobów językowych - wszystkie języki w każdym APK
             enableSplit = false
         }
     }
