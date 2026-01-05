@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.elozelo.medreminder.R
 import com.elozelo.medreminder.data.model.Appointment
 import java.util.*
@@ -58,6 +59,10 @@ fun AddAppointmentDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false
+        ),
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(max = 700.dp),
