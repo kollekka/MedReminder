@@ -10,15 +10,11 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.elozelo.medreminder.MainActivity
+import com.elozelo.medreminder.R
 
 object NotificationHelper {
     private const val CHANNEL_ID = "appointment_reminders"
-    private const val CHANNEL_NAME = "Przypomnienia o wizytach"
-    private const val CHANNEL_DESCRIPTION = "Powiadomienia o nadchodzących wizytach lekarskich"
-
     private const val MEDICATION_CHANNEL_ID = "medication_reminders"
-    private const val MEDICATION_CHANNEL_NAME = "Przypomnienia o lekach"
-    private const val MEDICATION_CHANNEL_DESCRIPTION = "Powiadomienia o zażyciu leków"
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -27,10 +23,10 @@ object NotificationHelper {
             // Kanał dla wizyt
             val appointmentChannel = NotificationChannel(
                 CHANNEL_ID,
-                CHANNEL_NAME,
+                context.getString(R.string.notification_channel_appointments),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = CHANNEL_DESCRIPTION
+                description = context.getString(R.string.notification_channel_appointments_desc)
                 enableVibration(true)
                 enableLights(true)
             }
@@ -38,10 +34,10 @@ object NotificationHelper {
 
             val medicationChannel = NotificationChannel(
                 MEDICATION_CHANNEL_ID,
-                MEDICATION_CHANNEL_NAME,
+                context.getString(R.string.notification_channel_medications),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = MEDICATION_CHANNEL_DESCRIPTION
+                description = context.getString(R.string.notification_channel_medications_desc)
                 enableVibration(true)
                 enableLights(true)
             }
@@ -69,9 +65,9 @@ object NotificationHelper {
         )
 
         val title = when (daysUntil) {
-            0 -> "Wizyta dzisiaj!"
-            1 -> "Wizyta jutro"
-            else -> "Wizyta za $daysUntil dni"
+            0 -> context.getString(R.string.notification_appointment_today)
+            1 -> context.getString(R.string.notification_appointment_tomorrow)
+            else -> context.getString(R.string.notification_appointment_in_days, daysUntil)
         }
 
         val content = "$appointmentName - $appointmentDate"
@@ -113,8 +109,8 @@ object NotificationHelper {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val title = "Pamiętaj o swoim lekarstwie!"
-        val content = "$medicationName, dawka: $quantity : $dosage o $timeString"
+        val title = context.getString(R.string.notification_medication_title)
+        val content = context.getString(R.string.notification_medication_text, medicationName, quantity, dosage, timeString)
 
         val notification = NotificationCompat.Builder(context, MEDICATION_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_menu_today)

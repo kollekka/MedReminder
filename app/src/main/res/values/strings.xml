@@ -34,6 +34,8 @@
     <string name="home_tomorrow">Jutro</string>
     <string name="home_all_medications_taken">Wszystkie leki dzisiaj zostały już wzięte!</string>
     <string name="home_confirm_take_medication">Czy na pewno wziąłeś/wzięłaś ten lek?</string>
+    <string name="home_already_taken_warning_title">Uwaga</string>
+    <string name="home_already_taken_warning_message">Dzisiaj już przyjąłeś/przyjęłaś dawkę tego leku. Czy na pewno chcesz przyjąć kolejną dawkę?</string>
     <string name="home_yes">Tak</string>
     <string name="home_no">Nie</string>
 
@@ -171,12 +173,19 @@
     <string name="error_invalid_dose">Wprowadź poprawną dawkę</string>
 
     <!-- Notifications -->
-    <string name="notification_medication_title">Przypomnienie o leku</string>
-    <string name="notification_medication_text">Czas wziąć %s</string>
+    <string name="notification_medication_title">Pamiętaj o swoim lekarstwie!</string>
+    <string name="notification_medication_text">%1$s, dawka: %2$d %3$s o %4$s</string>
     <string name="notification_appointment_title">Przypomnienie o wizycie</string>
     <string name="notification_appointment_text">Wizyta u %s za %d dni</string>
+    <string name="notification_appointment_today">Wizyta dzisiaj!</string>
+    <string name="notification_appointment_tomorrow">Wizyta jutro</string>
+    <string name="notification_appointment_in_days">Wizyta za %d dni</string>
     <string name="notification_low_stock_title">Niski stan leku</string>
     <string name="notification_low_stock_text">%s się kończy. Rozważ uzupełnienie.</string>
+    <string name="notification_channel_appointments">Przypomnienia o wizytach</string>
+    <string name="notification_channel_appointments_desc">Powiadomienia o nadchodzących wizytach lekarskich</string>
+    <string name="notification_channel_medications">Przypomnienia o lekach</string>
+    <string name="notification_channel_medications_desc">Powiadomienia o zażyciu leków</string>
 
     <!-- Notes Dialog -->
     <string name="notes_title">Notatki</string>

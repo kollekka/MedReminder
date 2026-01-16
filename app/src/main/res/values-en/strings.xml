@@ -34,6 +34,8 @@
     <string name="home_tomorrow">Tomorrow</string>
     <string name="home_all_medications_taken">All medications for today have been taken!</string>
     <string name="home_confirm_take_medication">Have you taken this medication?</string>
+    <string name="home_already_taken_warning_title">Warning</string>
+    <string name="home_already_taken_warning_message">You have already taken a dose of this medication today. Are you sure you want to take another dose?</string>
     <string name="home_yes">Yes</string>
     <string name="home_no">No</string>
 
@@ -170,12 +172,19 @@
     <string name="error_invalid_dose">Enter a valid dose</string>
 
     <!-- Notifications -->
-    <string name="notification_medication_title">Medication reminder</string>
-    <string name="notification_medication_text">Time to take %s</string>
+    <string name="notification_medication_title">Remember your medication!</string>
+    <string name="notification_medication_text">%1$s, dose: %2$d %3$s at %4$s</string>
     <string name="notification_appointment_title">Appointment reminder</string>
     <string name="notification_appointment_text">Appointment with %s in %d days</string>
+    <string name="notification_appointment_today">Appointment today!</string>
+    <string name="notification_appointment_tomorrow">Appointment tomorrow</string>
+    <string name="notification_appointment_in_days">Appointment in %d days</string>
     <string name="notification_low_stock_title">Low medication stock</string>
     <string name="notification_low_stock_text">%s is running low. Consider refilling.</string>
+    <string name="notification_channel_appointments">Appointment reminders</string>
+    <string name="notification_channel_appointments_desc">Notifications for upcoming medical appointments</string>
+    <string name="notification_channel_medications">Medication reminders</string>
+    <string name="notification_channel_medications_desc">Notifications to take your medications</string>
 
     <!-- Notes Dialog -->
     <string name="notes_title">Notes</string>

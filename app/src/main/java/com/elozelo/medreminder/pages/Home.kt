@@ -369,6 +369,17 @@ private fun SectionHeader(
 @Composable
 private fun MedicationTodayCard(medication: Medication, medicationViewModel: MedicationViewModel) {
     var showConfirmDialog by remember { mutableStateOf(false) }
+    var showAlreadyTakenWarningDialog by remember { mutableStateOf(false) }
+
+    // Sprawdź czy lek był już dzisiaj wzięty
+    val calendar = Calendar.getInstance()
+    val today = String.format(
+        "%04d-%02d-%02d",
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH) + 1,
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
+    val alreadyTakenToday = medication.lastTakenDate == today && medication.dailyTakenCount > 0
 
     Card(
         modifier = Modifier.width(180.dp),
@@ -425,13 +436,14 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
                 )
 
                 if (medication.reminderTimes.isNotEmpty()) {
-                    val nextTime = getNextReminderTime(medication)
-                    if (nextTime != null) {
+                    val reminderTimeStatus = getCurrentReminderTimeWithStatus(medication)
+                    if (reminderTimeStatus != null) {
+                        val (nextTime, isPast) = reminderTimeStatus
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "${stringResource(R.string.home_next_dose)}: $nextTime",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary
+                            color = if (isPast) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -439,7 +451,13 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Button(
-                    onClick = { showConfirmDialog = true },
+                    onClick = {
+                        if (alreadyTakenToday) {
+                            showAlreadyTakenWarningDialog = true
+                        } else {
+                            showConfirmDialog = true
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(vertical = 6.dp)
                 ) {
@@ -458,6 +476,7 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
         }
     }
 
+    // Dialog potwierdzający wzięcie leku (standardowy)
     if (showConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
@@ -484,32 +503,106 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
             title = {
                 Text(
                     medication.name,
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             text = {
                 Text(
                     stringResource(R.string.home_confirm_take_medication),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {
-                Button(
-                    onClick = {
-                        medicationViewModel.markMedicationTaken(medication)
-                        showConfirmDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                    OutlinedButton(onClick = { showConfirmDialog = false }) {
+                        Text(stringResource(R.string.home_no))
+                    }
                     Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.home_yes))
+                    Button(
+                        onClick = {
+                            medicationViewModel.markMedicationTaken(medication)
+                            showConfirmDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.home_yes))
+                    }
+                }
+            }
+        )
+    }
+
+    // Dialog ostrzegawczy - lek już dzisiaj wzięty
+    if (showAlreadyTakenWarningDialog) {
+        AlertDialog(
+            onDismissRequest = { showAlreadyTakenWarningDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(20.dp),
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
             },
-            dismissButton = {
-                OutlinedButton(onClick = { showConfirmDialog = false }) {
-                    Text(stringResource(R.string.home_no))
+            title = {
+                Text(
+                    stringResource(R.string.home_already_taken_warning_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            text = {
+                Text(
+                    stringResource(R.string.home_already_taken_warning_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    OutlinedButton(onClick = { showAlreadyTakenWarningDialog = false }) {
+                        Text(stringResource(R.string.home_no))
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            medicationViewModel.markMedicationTaken(medication)
+                            showAlreadyTakenWarningDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.home_yes))
+                    }
                 }
             }
         )
@@ -831,6 +924,14 @@ private fun getMedicationsForTodaySorted(medications: List<Medication>): List<Me
 }
 
 private fun getNextReminderTime(medication: Medication): String? {
+    return getCurrentReminderTimeWithStatus(medication)?.first
+}
+
+/**
+ * Zwraca parę (godzina przypomnienia, czy czas minął)
+ * Jeśli czas minął, zwraca najbliższą nieobsłużoną godzinę z flagą isPast=true
+ */
+private fun getCurrentReminderTimeWithStatus(medication: Medication): Pair<String, Boolean>? {
     val calendar = Calendar.getInstance()
     val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
     val currentMinute = calendar.get(Calendar.MINUTE)
@@ -844,35 +945,49 @@ private fun getNextReminderTime(medication: Medication): String? {
         calendar.get(Calendar.DAY_OF_MONTH)
     )
 
-    return medication.reminderTimes
+    // Pobierz wszystkie godziny z informacją o czasie
+    val timesWithInfo = medication.reminderTimes
         .mapNotNull { timeString ->
             val parts = timeString.split(":")
             if (parts.size == 2) {
                 val hour = parts[0].toIntOrNull() ?: return@mapNotNull null
                 val minute = parts[1].toIntOrNull() ?: return@mapNotNull null
                 val timeInMinutes = hour * 60 + minute
-
-                // Jeśli to dzisiaj i mamy lastTakenTime, zwróć następną godzinę po ostatnim wzięciu
-                if (medication.lastTakenDate == today && medication.lastTakenTime != null) {
-                    val lastParts = medication.lastTakenTime.split(":")
-                    if (lastParts.size == 2) {
-                        val lastHour = lastParts[0].toIntOrNull() ?: 0
-                        val lastMinute = lastParts[1].toIntOrNull() ?: 0
-                        val lastTimeInMinutes = lastHour * 60 + lastMinute
-                        if (timeInMinutes >= lastTimeInMinutes) {
-                            timeString to timeInMinutes
-                        } else null
-                    } else timeString to timeInMinutes
-                } else {
-                    // Nowy dzień lub brak lastTakenTime - zwróć najbliższą przyszłą godzinę
-                    if (timeInMinutes >= currentTimeInMinutes - 30) {
-                        timeString to timeInMinutes
-                    } else null
-                }
+                Triple(timeString, timeInMinutes, timeInMinutes < currentTimeInMinutes)
             } else null
         }
-        .minByOrNull { it.second }
-        ?.first
+        .sortedBy { it.second }
+
+    // Jeśli to dzisiaj i mamy lastTakenTime, szukaj następnej godziny po ostatnim wzięciu
+    if (medication.lastTakenDate == today && medication.lastTakenTime != null) {
+        val lastParts = medication.lastTakenTime.split(":")
+        if (lastParts.size == 2) {
+            val lastHour = lastParts[0].toIntOrNull() ?: 0
+            val lastMinute = lastParts[1].toIntOrNull() ?: 0
+            val lastTimeInMinutes = lastHour * 60 + lastMinute
+
+            // Znajdź następną godzinę po ostatnim wzięciu
+            val nextTime = timesWithInfo.find { it.second > lastTimeInMinutes }
+            if (nextTime != null) {
+                return Pair(nextTime.first, nextTime.third)
+            }
+        }
+    } else {
+        // Nowy dzień lub brak lastTakenTime
+        // Najpierw szukaj przyszłych godzin
+        val futureTime = timesWithInfo.find { !it.third }
+        if (futureTime != null) {
+            return Pair(futureTime.first, false)
+        }
+
+        // Jeśli nie ma przyszłych, zwróć pierwszą godzinę jako przeszłą
+        val pastTime = timesWithInfo.firstOrNull()
+        if (pastTime != null) {
+            return Pair(pastTime.first, true)
+        }
+    }
+
+    return null
 }
 
 private fun areAllTodayMedicationsTaken(medications: List<Medication>): Boolean {

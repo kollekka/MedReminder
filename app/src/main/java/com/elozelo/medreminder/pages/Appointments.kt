@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -402,7 +403,8 @@ private fun AppointmentItem(
                             Button(
                                 onClick = onMarkCompleted,
                                 modifier = Modifier.weight(1f),
-                                enabled = !appointment.completed
+                                enabled = !appointment.completed,
+                                colors = ButtonDefaults.buttonColors(containerColor = accentColor)
                             ) {
                                 Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
@@ -434,25 +436,37 @@ private fun AppointmentItem(
                                     )
                                 },
                                 title = {
-                                    Text(stringResource(R.string.appointment_delete_title))
+                                    Text(
+                                        stringResource(R.string.appointment_delete_title),
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
                                 },
                                 text = {
-                                    Text(stringResource(R.string.appointment_delete_message, appointment.name))
+                                    Text(
+                                        stringResource(R.string.appointment_delete_message, appointment.name),
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
                                 },
                                 confirmButton = {
-                                    Button(
-                                        onClick = {
-                                            onDelete()
-                                            showDeleteDialog = false
-                                        },
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Center
                                     ) {
-                                        Text(stringResource(R.string.appointment_delete_confirm))
-                                    }
-                                },
-                                dismissButton = {
-                                    OutlinedButton(onClick = { showDeleteDialog = false }) {
-                                        Text(stringResource(R.string.cancel))
+                                        OutlinedButton(onClick = { showDeleteDialog = false }) {
+                                            Text(stringResource(R.string.cancel))
+                                        }
+                                        Spacer(Modifier.width(8.dp))
+                                        Button(
+                                            onClick = {
+                                                onDelete()
+                                                showDeleteDialog = false
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                        ) {
+                                            Text(stringResource(R.string.appointment_delete_confirm))
+                                        }
                                     }
                                 }
                             )

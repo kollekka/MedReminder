@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -168,10 +169,16 @@ fun MedicationsPage(
                             onMarkTaken = { viewModel.markMedicationTaken(medication) },
                             onRefill = { viewModel.refillMedication(medication) },
                             onToggleNotifications = { med ->
-                                val updatedMedication = if (med.reminderTimes.isNotEmpty()) {
-                                    med.copy(reminderTimes = emptyList())
+                                val updatedMedication = if (med.reminderEnabled) {
+                                    // Wyłącz powiadomienia, ale zachowaj godziny
+                                    med.copy(reminderEnabled = false)
                                 } else {
-                                    med.copy(reminderTimes = listOf("08:00"))
+                                    // Włącz powiadomienia - użyj zapisanych godzin lub domyślnej
+                                    if (med.reminderTimes.isEmpty()) {
+                                        med.copy(reminderEnabled = true, reminderTimes = listOf("08:00"))
+                                    } else {
+                                        med.copy(reminderEnabled = true)
+                                    }
                                 }
                                 viewModel.updateMedication(updatedMedication)
                             },
@@ -232,6 +239,20 @@ private fun MedicationItem(
         (medication.remainingQuantity.toFloat() / medication.initialQuantity.toFloat()) * 100
     } else 100f
     val isLowStock = percentageRemaining < 15f && medication.remainingQuantity > 0
+
+    // Sprawdź czy lek był już dzisiaj wzięty
+    val calendar = Calendar.getInstance()
+    val today = String.format(
+        "%04d-%02d-%02d",
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH) + 1,
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
+    val alreadyTakenToday = medication.lastTakenDate == today && medication.dailyTakenCount > 0
+
+    // Stan dialogów
+    var showAlreadyTakenWarningDialog by remember { mutableStateOf(false) }
+    var showConfirmTakeDialog by remember { mutableStateOf(false) }
 
     // Kolor paska bocznego zależny od stanu
     val accentColor = when {
@@ -303,7 +324,7 @@ private fun MedicationItem(
 
                         IconButton(
                             onClick = {
-                                if (medication.reminderTimes.isNotEmpty()) {
+                                if (medication.reminderEnabled) {
                                     showDisableDialog = true
                                 } else {
                                     onToggleNotifications(medication)
@@ -312,9 +333,9 @@ private fun MedicationItem(
                             modifier = Modifier.size(32.dp)
                         ) {
                             Icon(
-                                imageVector = if (medication.reminderTimes.isNotEmpty()) Icons.Default.Notifications else Icons.Default.NotificationsOff,
+                                imageVector = if (medication.reminderEnabled) Icons.Default.Notifications else Icons.Default.NotificationsOff,
                                 contentDescription = null,
-                                tint = if (medication.reminderTimes.isNotEmpty())
+                                tint = if (medication.reminderEnabled)
                                     MaterialTheme.colorScheme.primary
                                 else
                                     MaterialTheme.colorScheme.onSurfaceVariant,
@@ -337,19 +358,35 @@ private fun MedicationItem(
                                 icon = {
                                     Icon(Icons.Default.NotificationsOff, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                 },
-                                title = { Text(stringResource(R.string.medication_notifications_disable_title)) },
-                                text = { Text(stringResource(R.string.medication_notifications_disable_message, medication.name)) },
-                                confirmButton = {
-                                    Button(onClick = {
-                                        onToggleNotifications(medication)
-                                        showDisableDialog = false
-                                    }) {
-                                        Text(stringResource(R.string.medication_notifications_disable_confirm))
-                                    }
+                                title = {
+                                    Text(
+                                        stringResource(R.string.medication_notifications_disable_title),
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
                                 },
-                                dismissButton = {
-                                    OutlinedButton(onClick = { showDisableDialog = false }) {
-                                        Text(stringResource(R.string.cancel))
+                                text = {
+                                    Text(
+                                        stringResource(R.string.medication_notifications_disable_message, medication.name),
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                },
+                                confirmButton = {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        OutlinedButton(onClick = { showDisableDialog = false }) {
+                                            Text(stringResource(R.string.cancel))
+                                        }
+                                        Spacer(Modifier.width(8.dp))
+                                        Button(onClick = {
+                                            onToggleNotifications(medication)
+                                            showDisableDialog = false
+                                        }) {
+                                            Text(stringResource(R.string.medication_notifications_disable_confirm))
+                                        }
                                     }
                                 }
                             )
@@ -480,7 +517,13 @@ private fun MedicationItem(
                                 }
                             } else {
                                 Button(
-                                    onClick = onMarkTaken,
+                                    onClick = {
+                                        if (alreadyTakenToday) {
+                                            showAlreadyTakenWarningDialog = true
+                                        } else {
+                                            showConfirmTakeDialog = true
+                                        }
+                                    },
                                     modifier = Modifier.weight(1f)
                                 ) {
                                     Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -511,25 +554,37 @@ private fun MedicationItem(
                                     )
                                 },
                                 title = {
-                                    Text(stringResource(R.string.medication_delete_title))
+                                    Text(
+                                        stringResource(R.string.medication_delete_title),
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
                                 },
                                 text = {
-                                    Text(stringResource(R.string.medication_delete_message, medication.name))
+                                    Text(
+                                        stringResource(R.string.medication_delete_message, medication.name),
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
                                 },
                                 confirmButton = {
-                                    Button(
-                                        onClick = {
-                                            onDelete()
-                                            showDeleteDialog = false
-                                        },
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Center
                                     ) {
-                                        Text(stringResource(R.string.medication_delete_confirm))
-                                    }
-                                },
-                                dismissButton = {
-                                    OutlinedButton(onClick = { showDeleteDialog = false }) {
-                                        Text(stringResource(R.string.cancel))
+                                        OutlinedButton(onClick = { showDeleteDialog = false }) {
+                                            Text(stringResource(R.string.cancel))
+                                        }
+                                        Spacer(Modifier.width(8.dp))
+                                        Button(
+                                            onClick = {
+                                                onDelete()
+                                                showDeleteDialog = false
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                        ) {
+                                            Text(stringResource(R.string.medication_delete_confirm))
+                                        }
                                     }
                                 }
                             )
@@ -538,6 +593,138 @@ private fun MedicationItem(
                 }
             }
         }
+    }
+
+    // Dialog standardowy - potwierdzenie wzięcia leku
+    if (showConfirmTakeDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmTakeDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(20.dp),
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Medication,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    medication.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            text = {
+                Text(
+                    stringResource(R.string.home_confirm_take_medication),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    OutlinedButton(onClick = { showConfirmTakeDialog = false }) {
+                        Text(stringResource(R.string.home_no))
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            onMarkTaken()
+                            showConfirmTakeDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.home_yes))
+                    }
+                }
+            }
+        )
+    }
+
+    // Dialog ostrzegawczy - lek już dzisiaj wzięty
+    if (showAlreadyTakenWarningDialog) {
+        AlertDialog(
+            onDismissRequest = { showAlreadyTakenWarningDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(20.dp),
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    stringResource(R.string.home_already_taken_warning_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            text = {
+                Text(
+                    stringResource(R.string.home_already_taken_warning_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    OutlinedButton(onClick = { showAlreadyTakenWarningDialog = false }) {
+                        Text(stringResource(R.string.home_no))
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            onMarkTaken()
+                            showAlreadyTakenWarningDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.home_yes))
+                    }
+                }
+            }
+        )
     }
 }
 
