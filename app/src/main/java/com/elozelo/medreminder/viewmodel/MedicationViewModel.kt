@@ -110,6 +110,23 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
                             else -> 0
                         }
 
+                        // Custom frequency options
+                        val customDaysOfWeekRaw = doc.get("customDaysOfWeek") as? List<*>
+                        val customDaysOfWeek = customDaysOfWeekRaw?.mapNotNull {
+                            when (it) {
+                                is Long -> it.toInt()
+                                is Int -> it
+                                else -> null
+                            }
+                        } ?: emptyList()
+
+                        val customIntervalDaysRaw = doc.get("customIntervalDays")
+                        val customIntervalDays = when (customIntervalDaysRaw) {
+                            is Long -> customIntervalDaysRaw.toInt()
+                            is Int -> customIntervalDaysRaw
+                            else -> 1
+                        }
+
                         Medication(
                             id = doc.id,
                             userId = doc.getString("userId") ?: "",
@@ -125,7 +142,9 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
                             reminderTimes = doc.get("reminderTimes") as? List<String> ?: emptyList(),
                             lastTakenTime = doc.getString("lastTakenTime"),
                             dailyTakenCount = dailyTakenCount,
-                            lastTakenDate = doc.getString("lastTakenDate")
+                            lastTakenDate = doc.getString("lastTakenDate"),
+                            customDaysOfWeek = customDaysOfWeek,
+                            customIntervalDays = customIntervalDays
                         )
                     } catch (e: Exception) {
                         _errorMessage.value = "Błąd parsowania danych: ${e.localizedMessage}"

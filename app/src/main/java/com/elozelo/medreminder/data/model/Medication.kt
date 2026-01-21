@@ -22,7 +22,10 @@ data class Medication(
     val reminderTimes: List<String> = emptyList(),
     val lastTakenTime: String? = null,
     val dailyTakenCount: Int = 0,
-    val lastTakenDate: String? = null
+    val lastTakenDate: String? = null,
+    // Customowe ustawienia częstotliwości
+    val customDaysOfWeek: List<Int> = emptyList(), // 1=Pon, 2=Wt, 3=Śr, 4=Czw, 5=Pt, 6=Sob, 7=Ndz
+    val customIntervalDays: Int = 1 // Co ile dni (dla EVERY_X_DAYS)
 )
 
 enum class DosageUnit(@StringRes val stringResId: Int) {
@@ -41,7 +44,8 @@ enum class frequencyUnit(@StringRes val stringResId: Int) {
     DAILY(R.string.frequency_daily),
     WEEKLY(R.string.frequency_weekly),
     MONTHLY(R.string.frequency_monthly),
-    YEARLY(R.string.frequency_yearly);
+    SPECIFIC_DAYS(R.string.frequency_specific_days),    // Konkretne dni tygodnia
+    EVERY_X_DAYS(R.string.frequency_every_x_days);      // Co X dni
 
     fun getLocalizedName(context: Context): String {
         return context.getString(stringResId)

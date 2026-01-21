@@ -269,10 +269,15 @@ private fun MedicationItem(
     isEmpty: Boolean = false
 ) {
     val context = LocalContext.current
-    val percentageRemaining = if (medication.initialQuantity > 0) {
-        (medication.remainingQuantity.toFloat() / medication.initialQuantity.toFloat()) * 100
-    } else 100f
-    val isLowStock = percentageRemaining < 15f && medication.remainingQuantity > 0
+
+    // Low stock gdy zostały 2 lub mniej dawki
+    val dosesRemaining = if (medication.quantity > 0) {
+        medication.remainingQuantity / medication.quantity
+    } else 0
+    val isLowStock = dosesRemaining <= 2 && medication.remainingQuantity > 0
+
+    // Lokalny licznik wzięć w tej sesji (resetowany przy zmianie medication.id)
+    var localTakenCount by remember(medication.id) { mutableStateOf(0) }
 
     // Sprawdź czy lek był już dzisiaj wzięty
     val calendar = Calendar.getInstance()
@@ -287,6 +292,7 @@ private fun MedicationItem(
     // Stan dialogów
     var showAlreadyTakenWarningDialog by remember { mutableStateOf(false) }
     var showConfirmTakeDialog by remember { mutableStateOf(false) }
+    var showEmptyMedicationDialog by remember { mutableStateOf(false) }
 
     // Kolor paska bocznego zależny od stanu
     val accentColor = when {
@@ -465,9 +471,30 @@ private fun MedicationItem(
                                 }
 
                                 // Częstotliwość
+                                val frequencyText = when (medication.frequency) {
+                                    frequencyUnit.SPECIFIC_DAYS -> {
+                                        val dayNames = medication.customDaysOfWeek.map { dayNum ->
+                                            when (dayNum) {
+                                                1 -> stringResource(R.string.day_monday)
+                                                2 -> stringResource(R.string.day_tuesday)
+                                                3 -> stringResource(R.string.day_wednesday)
+                                                4 -> stringResource(R.string.day_thursday)
+                                                5 -> stringResource(R.string.day_friday)
+                                                6 -> stringResource(R.string.day_saturday)
+                                                7 -> stringResource(R.string.day_sunday)
+                                                else -> ""
+                                            }
+                                        }.filter { it.isNotEmpty() }
+                                        dayNames.joinToString(", ")
+                                    }
+                                    frequencyUnit.EVERY_X_DAYS -> {
+                                        stringResource(R.string.frequency_every_x_days_format, medication.customIntervalDays)
+                                    }
+                                    else -> medication.frequency.getLocalizedName(context)
+                                }
                                 InfoRow(
                                     icon = Icons.Default.EventRepeat,
-                                    text = medication.frequency.getLocalizedName(context),
+                                    text = frequencyText,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
 
@@ -681,8 +708,20 @@ private fun MedicationItem(
                     Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = {
+
+                            val effectiveRemainingPieces = medication.remainingQuantity - (localTakenCount * medication.quantity)
+                            // Ile SZTUK zostanie po tej dawce
+                            val remainingAfterTaking = effectiveRemainingPieces - medication.quantity
+                            // Ostatnia dawka = po tej dawce nie zostanie ani jedna sztuka
+                            val willBeEmpty = remainingAfterTaking <= 0
+
+                            localTakenCount++
                             onMarkTaken()
                             showConfirmTakeDialog = false
+
+                            if (willBeEmpty) {
+                                showEmptyMedicationDialog = true
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
@@ -747,14 +786,96 @@ private fun MedicationItem(
                     Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = {
+                            val effectiveRemainingPieces = medication.remainingQuantity - (localTakenCount * medication.quantity)
+                            val remainingAfterTaking = effectiveRemainingPieces - medication.quantity
+                            val willBeEmpty = remainingAfterTaking <= 0
+
+                            localTakenCount++
                             onMarkTaken()
                             showAlreadyTakenWarningDialog = false
+
+                            if (willBeEmpty) {
+                                showEmptyMedicationDialog = true
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.home_yes))
+                    }
+                }
+            }
+        )
+    }
+
+    // Dialog - lek się skończył
+    if (showEmptyMedicationDialog) {
+        AlertDialog(
+            onDismissRequest = { showEmptyMedicationDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(20.dp),
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.tertiaryContainer,
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Inventory2,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    stringResource(R.string.medication_empty_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            text = {
+                Text(
+                    stringResource(R.string.medication_empty_message, medication.name),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { showEmptyMedicationDialog = false },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Archive, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.medication_archive))
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            onDelete()
+                            showEmptyMedicationDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.medication_delete))
                     }
                 }
             }

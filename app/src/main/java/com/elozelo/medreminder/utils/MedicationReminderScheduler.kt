@@ -1,11 +1,13 @@
 package com.elozelo.medreminder.utils
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
-import androidx.work.*
+import android.content.Intent
+import android.os.Build
 import com.elozelo.medreminder.data.model.Medication
 import com.elozelo.medreminder.data.model.frequencyUnit
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 object MedicationReminderScheduler {
 
@@ -15,7 +17,6 @@ object MedicationReminderScheduler {
             cancelMedicationReminders(context, medication.id)
             return
         }
-
 
         cancelMedicationReminders(context, medication.id)
 
@@ -49,18 +50,18 @@ object MedicationReminderScheduler {
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
 
+                // Jeśli czas już minął dzisiaj, zaplanuj na jutro
                 if (before(now)) {
                     add(Calendar.DAY_OF_MONTH, 1)
                 }
             }
 
-            val delay = reminderTime.timeInMillis - now.timeInMillis
-
             when (medication.frequency) {
-                frequencyUnit.DAILY -> scheduleDailyReminder(context, medication, delay, timeString, index)
-                frequencyUnit.WEEKLY -> scheduleWeeklyReminder(context, medication, delay, timeString, index)
-                frequencyUnit.MONTHLY -> scheduleMonthlyReminders(context, medication, reminderTime, timeString, index)
-                frequencyUnit.YEARLY -> scheduleYearlyReminder(context, medication, reminderTime, timeString, index)
+                frequencyUnit.DAILY -> scheduleDailyReminder(context, medication, reminderTime, timeString, index)
+                frequencyUnit.WEEKLY -> scheduleWeeklyReminder(context, medication, reminderTime, timeString, index)
+                frequencyUnit.MONTHLY -> scheduleMonthlyReminder(context, medication, reminderTime, timeString, index)
+                frequencyUnit.SPECIFIC_DAYS -> scheduleSpecificDaysReminder(context, medication, reminderTime, timeString, index)
+                frequencyUnit.EVERY_X_DAYS -> scheduleEveryXDaysReminder(context, medication, reminderTime, timeString, index)
             }
 
         } catch (e: Exception) {
@@ -71,160 +72,196 @@ object MedicationReminderScheduler {
     private fun scheduleDailyReminder(
         context: Context,
         medication: Medication,
-        delay: Long,
+        startTime: Calendar,
         timeString: String,
         index: Int
     ) {
-        for (dayOffset in 0..30) {
-            val adjustedDelay = delay + TimeUnit.DAYS.toMillis(dayOffset.toLong())
-            scheduleOneTimeReminder(
-                context = context,
-                medication = medication,
-                delay = adjustedDelay,
-                timeString = timeString,
-                workTag = "${medication.id}_time_${index}_day_$dayOffset"
-            )
-        }
+        // Dla codziennych przypomnień planujemy najbliższe wystąpienie
+        // AlarmManager z setRepeating nie jest dokładny, więc planujemy tylko jeden alarm
+        // i przeskalujemy go ponownie gdy się wykona (poprzez receiver lub przy starcie aplikacji)
+        scheduleExactAlarm(
+            context = context,
+            medication = medication,
+            triggerTimeMillis = startTime.timeInMillis,
+            timeString = timeString,
+            requestCode = generateRequestCode(medication.id, index, 0)
+        )
     }
 
     private fun scheduleWeeklyReminder(
         context: Context,
         medication: Medication,
-        delay: Long,
+        startTime: Calendar,
         timeString: String,
         index: Int
     ) {
-        // Zaplanuj na ten tydzień i kolejne 12 tygodni
-        for (weekOffset in 0..12) {
-            val adjustedDelay = delay + TimeUnit.DAYS.toMillis(7L * weekOffset)
-            scheduleOneTimeReminder(
-                context = context,
-                medication = medication,
-                delay = adjustedDelay,
-                timeString = timeString,
-                workTag = "${medication.id}_time_${index}_week_$weekOffset"
+        scheduleExactAlarm(
+            context = context,
+            medication = medication,
+            triggerTimeMillis = startTime.timeInMillis,
+            timeString = timeString,
+            requestCode = generateRequestCode(medication.id, index, 1)
+        )
+    }
+
+    private fun scheduleMonthlyReminder(
+        context: Context,
+        medication: Medication,
+        startTime: Calendar,
+        timeString: String,
+        index: Int
+    ) {
+        scheduleExactAlarm(
+            context = context,
+            medication = medication,
+            triggerTimeMillis = startTime.timeInMillis,
+            timeString = timeString,
+            requestCode = generateRequestCode(medication.id, index, 2)
+        )
+    }
+
+    private fun scheduleSpecificDaysReminder(
+        context: Context,
+        medication: Medication,
+        startTime: Calendar,
+        timeString: String,
+        index: Int
+    ) {
+        // Znajdź najbliższy dzień z listy wybranych dni
+        if (medication.customDaysOfWeek.isEmpty()) return
+
+        val now = Calendar.getInstance()
+        val reminderTime = startTime.clone() as Calendar
+
+        // Szukaj najbliższego pasującego dnia (max 7 dni do przodu)
+        for (i in 0..7) {
+            val dayOfWeek = reminderTime.get(Calendar.DAY_OF_WEEK)
+            // Konwersja: Calendar.MONDAY=2 -> 1, TUESDAY=3 -> 2, ..., SUNDAY=1 -> 7
+            val normalizedDay = if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
+
+            if (medication.customDaysOfWeek.contains(normalizedDay) && reminderTime.after(now)) {
+                scheduleExactAlarm(
+                    context = context,
+                    medication = medication,
+                    triggerTimeMillis = reminderTime.timeInMillis,
+                    timeString = timeString,
+                    requestCode = generateRequestCode(medication.id, index, 3)
+                )
+                return
+            }
+            reminderTime.add(Calendar.DAY_OF_MONTH, 1)
+        }
+    }
+
+    private fun scheduleEveryXDaysReminder(
+        context: Context,
+        medication: Medication,
+        startTime: Calendar,
+        timeString: String,
+        index: Int
+    ) {
+        val now = Calendar.getInstance()
+        val reminderTime = startTime.clone() as Calendar
+
+        // Jeśli czas minął dzisiaj, dodaj interwał dni
+        if (reminderTime.before(now) || reminderTime == now) {
+            reminderTime.add(Calendar.DAY_OF_MONTH, medication.customIntervalDays)
+        }
+
+        scheduleExactAlarm(
+            context = context,
+            medication = medication,
+            triggerTimeMillis = reminderTime.timeInMillis,
+            timeString = timeString,
+            requestCode = generateRequestCode(medication.id, index, 4)
+        )
+    }
+
+    private fun scheduleExactAlarm(
+        context: Context,
+        medication: Medication,
+        triggerTimeMillis: Long,
+        timeString: String,
+        requestCode: Int
+    ) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        val intent = Intent(context, MedicationAlarmReceiver::class.java).apply {
+            putExtra("medicationId", medication.id)
+            putExtra("medicationName", medication.name)
+            putExtra("dosage", medication.dosage.name)
+            putExtra("quantity", medication.quantity)
+            putExtra("timeString", timeString)
+            putExtra("frequency", medication.frequency.name)
+        }
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTimeMillis,
+                        pendingIntent
+                    )
+                } else {
+                    // Fallback dla urządzeń bez pozwolenia na dokładne alarmy
+                    alarmManager.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTimeMillis,
+                        pendingIntent
+                    )
+                }
+            } else {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTimeMillis,
+                    pendingIntent
+                )
+            }
+        } catch (e: SecurityException) {
+            // Fallback jeśli brak uprawnień
+            e.printStackTrace()
+            alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                triggerTimeMillis,
+                pendingIntent
             )
         }
     }
 
-    private fun scheduleYearlyReminder(
-        context: Context,
-        medication: Medication,
-        startTime: Calendar,
-        timeString: String,
-        index: Int
-    ) {
-        // Zaplanuj na ten rok i kolejne 2 lata
-        for (yearOffset in 0..2) {
-            val nextReminderTime = startTime.clone() as Calendar
-            nextReminderTime.add(Calendar.YEAR, yearOffset)
-
-            val now = Calendar.getInstance()
-            if (nextReminderTime.after(now)) {
-                val delay = nextReminderTime.timeInMillis - now.timeInMillis
-                scheduleOneTimeReminder(
-                    context = context,
-                    medication = medication,
-                    delay = delay,
-                    timeString = timeString,
-                    workTag = "${medication.id}_time_${index}_year_$yearOffset"
-                )
-            }
-        }
-    }
-
-    private fun scheduleOneTimeReminder(
-        context: Context,
-        medication: Medication,
-        delay: Long,
-        timeString: String,
-        workTag: String
-    ) {
-        val data = workDataOf(
-            "medicationId" to medication.id,
-            "medicationName" to medication.name,
-            "dosage" to medication.dosage.name, // Używamy enum.name zamiast displayName
-            "quantity" to medication.quantity,
-            "timeString" to timeString
-        )
-
-        val workRequest = OneTimeWorkRequestBuilder<MedicationReminderWorker>()
-            .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-            .setInputData(data)
-            .addTag(workTag)
-            .build()
-
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            workTag,
-            ExistingWorkPolicy.REPLACE,
-            workRequest
-        )
-    }
-
-    private fun scheduleMonthlyReminders(
-        context: Context,
-        medication: Medication,
-        startTime: Calendar,
-        timeString: String,
-        index: Int
-    ) {
-        for (monthOffset in 1..12) {
-            val nextReminderTime = startTime.clone() as Calendar
-            nextReminderTime.add(Calendar.MONTH, monthOffset)
-
-            val now = Calendar.getInstance()
-            if (nextReminderTime.after(now)) {
-                val delay = nextReminderTime.timeInMillis - now.timeInMillis
-                val workTag = "${medication.id}_time_${index}_month_$monthOffset"
-
-                val data = workDataOf(
-                    "medicationId" to medication.id,
-                    "medicationName" to medication.name,
-                    "dosage" to medication.dosage.name, // Używamy enum.name zamiast displayName
-                    "quantity" to medication.quantity,
-                    "timeString" to timeString
-                )
-
-                val workRequest = OneTimeWorkRequestBuilder<MedicationReminderWorker>()
-                    .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-                    .setInputData(data)
-                    .addTag(workTag)
-                    .build()
-
-                WorkManager.getInstance(context).enqueueUniqueWork(
-                    workTag,
-                    ExistingWorkPolicy.REPLACE,
-                    workRequest
-                )
-            }
-        }
+    private fun generateRequestCode(medicationId: String, timeIndex: Int, frequencyType: Int): Int {
+        // Generuj unikalny request code dla każdego alarmu
+        return (medicationId.hashCode() + timeIndex * 1000 + frequencyType * 100)
     }
 
     fun cancelMedicationReminders(context: Context, medicationId: String) {
-        val workManager = WorkManager.getInstance(context)
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        // Anuluj wszystkie przypomnienia dla tego leku
-        for (i in 0..10) { // Maksymalnie 10 godzin dziennie
-            // Daily
-            for (dayOffset in 0..30) {
-                workManager.cancelAllWorkByTag("${medicationId}_time_${i}_day_$dayOffset")
-            }
+        // Anuluj wszystkie możliwe alarmy dla tego leku
+        for (timeIndex in 0..10) {
+            for (frequencyType in 0..4) { // 5 typów częstotliwości (0-4)
+                val requestCode = generateRequestCode(medicationId, timeIndex, frequencyType)
 
-            // Weekly
-            for (weekOffset in 0..12) {
-                workManager.cancelAllWorkByTag("${medicationId}_time_${i}_week_$weekOffset")
-            }
+                val intent = Intent(context, MedicationAlarmReceiver::class.java)
+                val pendingIntent = PendingIntent.getBroadcast(
+                    context,
+                    requestCode,
+                    intent,
+                    PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+                )
 
-            // Monthly
-            for (monthOffset in 1..12) {
-                workManager.cancelAllWorkByTag("${medicationId}_time_${i}_month_$monthOffset")
-            }
-
-            // Yearly
-            for (yearOffset in 0..2) {
-                workManager.cancelAllWorkByTag("${medicationId}_time_${i}_year_$yearOffset")
+                pendingIntent?.let {
+                    alarmManager.cancel(it)
+                    it.cancel()
+                }
             }
         }
     }
 }
-

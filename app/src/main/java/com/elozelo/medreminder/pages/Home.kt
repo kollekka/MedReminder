@@ -85,10 +85,6 @@ fun HomePage(
         )
 
         Spacer(modifier = Modifier.height(24.dp))
-
-        LowStockMedicationsSection(medications)
-
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -173,7 +169,7 @@ private fun DashboardGrid(
 ) {
     val todayMedications = getMedicationsForTodaySorted(medications)
     val upcomingAppointments = appointments.filter { it.dateTime > System.currentTimeMillis() && !it.completed }
-    val lowStockMedications = medications.filter { it.remainingQuantity <= 5 && it.remainingQuantity > 0 }
+    val lowStockMedications = medications.filter { it.remainingQuantity <= 5 }
     val allTaken = areAllTodayMedicationsTaken(medications)
 
     Column(
@@ -376,6 +372,10 @@ private fun SectionHeader(
 private fun MedicationTodayCard(medication: Medication, medicationViewModel: MedicationViewModel) {
     var showConfirmDialog by remember { mutableStateOf(false) }
     var showAlreadyTakenWarningDialog by remember { mutableStateOf(false) }
+    var showEmptyMedicationDialog by remember { mutableStateOf(false) }
+
+    // Lokalny licznik wzięć w tej sesji (resetowany przy zmianie medication.id)
+    var localTakenCount by remember(medication.id) { mutableStateOf(0) }
 
     // Sprawdź czy lek był już dzisiaj wzięty
     val calendar = Calendar.getInstance()
@@ -534,8 +534,19 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
                     Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = {
+                            // Oblicz efektywną pozostałą ilość z uwzględnieniem lokalnych wzięć
+                            val effectiveRemaining = medication.remainingQuantity - (localTakenCount * medication.quantity)
+                            // Sprawdź czy PO wzięciu tej dawki zostanie 0 lub mniej
+                            val remainingAfterTaking = effectiveRemaining - medication.quantity
+                            val willBeEmpty = remainingAfterTaking <= 0
+
+                            localTakenCount++
                             medicationViewModel.markMedicationTaken(medication)
                             showConfirmDialog = false
+
+                            if (willBeEmpty) {
+                                showEmptyMedicationDialog = true
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
@@ -600,8 +611,19 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
                     Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = {
+                            // Oblicz efektywną pozostałą ilość z uwzględnieniem lokalnych wzięć
+                            val effectiveRemaining = medication.remainingQuantity - (localTakenCount * medication.quantity)
+                            // Sprawdź czy PO wzięciu tej dawki zostanie 0 lub mniej
+                            val remainingAfterTaking = effectiveRemaining - medication.quantity
+                            val willBeEmpty = remainingAfterTaking <= 0
+
+                            localTakenCount++
                             medicationViewModel.markMedicationTaken(medication)
                             showAlreadyTakenWarningDialog = false
+
+                            if (willBeEmpty) {
+                                showEmptyMedicationDialog = true
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) {
@@ -613,7 +635,81 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
             }
         )
     }
+
+    // Dialog - lek się skończył
+    if (showEmptyMedicationDialog) {
+        AlertDialog(
+            onDismissRequest = { showEmptyMedicationDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(20.dp),
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.tertiaryContainer,
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Inventory2,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    stringResource(R.string.medication_empty_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            text = {
+                Text(
+                    stringResource(R.string.medication_empty_message, medication.name),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { showEmptyMedicationDialog = false },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Archive, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.medication_archive))
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            medicationViewModel.deleteMedication(medication.id)
+                            showEmptyMedicationDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.medication_delete))
+                    }
+                }
+            }
+        )
+    }
 }
+
 
 @Composable
 private fun UpcomingAppointmentsSection(
@@ -768,30 +864,6 @@ private fun AppointmentCard(appointment: Appointment, onClick: () -> Unit = {}) 
 }
 
 @Composable
-private fun LowStockMedicationsSection(medications: List<Medication>) {
-    val lowStockMedications = medications.filter { it.remainingQuantity <= 5 && it.remainingQuantity > 0 }
-
-    if (lowStockMedications.isNotEmpty()) {
-        Text(
-            text = stringResource(R.string.home_low_stock_medications),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(lowStockMedications) { medication ->
-                LowStockCard(medication)
-            }
-        }
-    }
-}
-
-@Composable
 private fun LowStockCard(medication: Medication) {
     Card(
         modifier = Modifier.width(150.dp),
@@ -842,7 +914,10 @@ private fun LowStockCard(medication: Medication) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "${stringResource(R.string.home_remaining)}: ${medication.remainingQuantity}",
+                    text = if (medication.remainingQuantity == 0)
+                        stringResource(R.string.medication_out_of_stock)
+                    else
+                        "${stringResource(R.string.home_remaining)}: ${medication.remainingQuantity}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error
                 )

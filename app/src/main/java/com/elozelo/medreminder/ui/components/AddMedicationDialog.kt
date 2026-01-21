@@ -43,6 +43,10 @@ fun AddMedicationDialog(
     var reminderEnabled by remember { mutableStateOf(medication?.reminderEnabled ?: true) }
     var reminderTimes by remember { mutableStateOf<List<String>>(medication?.reminderTimes ?: emptyList()) }
 
+    // Customowe opcje częstotliwości
+    var customDaysOfWeek by remember { mutableStateOf(medication?.customDaysOfWeek ?: emptyList()) }
+    var customIntervalDays by remember { mutableStateOf(medication?.customIntervalDays?.toString() ?: "2") }
+
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
@@ -223,6 +227,87 @@ fun AddMedicationDialog(
                     }
                 }
 
+                // Opcje dla wybranych dni tygodnia
+                if (frequency == frequencyUnit.SPECIFIC_DAYS) {
+                    Text(
+                        text = stringResource(R.string.frequency_select_days),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    val dayNamesRow1 = listOf(
+                        1 to stringResource(R.string.day_monday),
+                        2 to stringResource(R.string.day_tuesday),
+                        3 to stringResource(R.string.day_wednesday),
+                        4 to stringResource(R.string.day_thursday)
+                    )
+
+                    val dayNamesRow2 = listOf(
+                        5 to stringResource(R.string.day_friday),
+                        6 to stringResource(R.string.day_saturday),
+                        7 to stringResource(R.string.day_sunday)
+                    )
+
+                    // Pierwszy wiersz: Pon - Czw
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        dayNamesRow1.forEach { (dayNum, dayName) ->
+                            FilterChip(
+                                selected = customDaysOfWeek.contains(dayNum),
+                                onClick = {
+                                    customDaysOfWeek = if (customDaysOfWeek.contains(dayNum)) {
+                                        customDaysOfWeek - dayNum
+                                    } else {
+                                        customDaysOfWeek + dayNum
+                                    }
+                                },
+                                label = { Text(dayName, style = MaterialTheme.typography.labelSmall) }
+                            )
+                        }
+                    }
+
+                    // Drugi wiersz: Pt - Ndz
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        dayNamesRow2.forEach { (dayNum, dayName) ->
+                            FilterChip(
+                                selected = customDaysOfWeek.contains(dayNum),
+                                onClick = {
+                                    customDaysOfWeek = if (customDaysOfWeek.contains(dayNum)) {
+                                        customDaysOfWeek - dayNum
+                                    } else {
+                                        customDaysOfWeek + dayNum
+                                    }
+                                },
+                                label = { Text(dayName, style = MaterialTheme.typography.labelSmall) }
+                            )
+                        }
+                    }
+                }
+
+                // Opcje dla co X dni
+                if (frequency == frequencyUnit.EVERY_X_DAYS) {
+                    OutlinedTextField(
+                        value = customIntervalDays,
+                        onValueChange = {
+                            val filtered = it.filter { char -> char.isDigit() }
+                            val numValue = filtered.toIntOrNull() ?: 0
+                            if (filtered.isEmpty() || (numValue in 1..365)) {
+                                customIntervalDays = filtered
+                            }
+                        },
+                        label = { Text(stringResource(R.string.frequency_interval_label)) },
+                        leadingIcon = { Icon(Icons.Default.Repeat, "Interwał") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        supportingText = { Text("1-365") }
+                    )
+                }
+
                 // Data zakończenia
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -386,7 +471,9 @@ fun AddMedicationDialog(
                                 endDate = if (hasEndDate) endDate else null,
                                 notes = notes.trim(),
                                 reminderEnabled = reminderEnabled,
-                                reminderTimes = reminderTimes
+                                reminderTimes = reminderTimes,
+                                customDaysOfWeek = if (frequency == frequencyUnit.SPECIFIC_DAYS) customDaysOfWeek.sorted() else emptyList(),
+                                customIntervalDays = if (frequency == frequencyUnit.EVERY_X_DAYS) (customIntervalDays.toIntOrNull() ?: 2) else 1
                             )
                         )
                     }

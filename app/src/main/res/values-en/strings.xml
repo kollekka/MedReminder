@@ -116,7 +116,27 @@
     <string name="frequency_daily">Daily</string>
     <string name="frequency_weekly">Weekly</string>
     <string name="frequency_monthly">Monthly</string>
-    <string name="frequency_yearly">Yearly</string>
+    <string name="frequency_specific_days">Specific days of week</string>
+    <string name="frequency_every_x_days">Every X days</string>
+
+    <!-- Custom Frequency -->
+    <string name="frequency_every_x_days_format">Every %d days</string>
+    <string name="frequency_interval_label">Every how many days?</string>
+    <string name="frequency_select_days">Select days</string>
+    <string name="day_monday">Mon</string>
+    <string name="day_tuesday">Tue</string>
+    <string name="day_wednesday">Wed</string>
+    <string name="day_thursday">Thu</string>
+    <string name="day_friday">Fri</string>
+    <string name="day_saturday">Sat</string>
+    <string name="day_sunday">Sun</string>
+    <string name="day_monday_full">Monday</string>
+    <string name="day_tuesday_full">Tuesday</string>
+    <string name="day_wednesday_full">Wednesday</string>
+    <string name="day_thursday_full">Thursday</string>
+    <string name="day_friday_full">Friday</string>
+    <string name="day_saturday_full">Saturday</string>
+    <string name="day_sunday_full">Sunday</string>
     <!-- Appointments Page -->
     <string name="appointments_title">Appointments</string>
     <string name="appointments_upcoming">Upcoming</string>
@@ -198,6 +218,11 @@
     <string name="medication_notifications_disable_title">Disable notifications?</string>
     <string name="medication_notifications_disable_message">Are you sure you want to disable notifications for \"%s\"?</string>
     <string name="medication_notifications_disable_confirm">Yes, disable</string>
+    <string name="medication_empty_title">Medication is empty</string>
+    <string name="medication_empty_message">You have run out of \"%s\". What would you like to do?</string>
+    <string name="medication_archive">Archive</string>
+    <string name="medication_delete">Delete medication</string>
+    <string name="medication_out_of_stock">Out</string>
 
     <!-- Appointment Dialogs -->
     <string name="appointment_delete_title">Delete appointment?</string>

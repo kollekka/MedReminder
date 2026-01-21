@@ -116,7 +116,27 @@
     <string name="frequency_daily">Codziennie</string>
     <string name="frequency_weekly">Co tydzień</string>
     <string name="frequency_monthly">Co miesiąc</string>
-    <string name="frequency_yearly">Co rok</string>
+    <string name="frequency_specific_days">Wybrane dni tygodnia</string>
+    <string name="frequency_every_x_days">Co X dni</string>
+
+    <!-- Custom Frequency -->
+    <string name="frequency_every_x_days_format">Co %d dni</string>
+    <string name="frequency_interval_label">Co ile dni?</string>
+    <string name="frequency_select_days">Wybierz dni</string>
+    <string name="day_monday">Pon</string>
+    <string name="day_tuesday">Wt</string>
+    <string name="day_wednesday">Śr</string>
+    <string name="day_thursday">Czw</string>
+    <string name="day_friday">Pt</string>
+    <string name="day_saturday">Sob</string>
+    <string name="day_sunday">Ndz</string>
+    <string name="day_monday_full">Poniedziałek</string>
+    <string name="day_tuesday_full">Wtorek</string>
+    <string name="day_wednesday_full">Środa</string>
+    <string name="day_thursday_full">Czwartek</string>
+    <string name="day_friday_full">Piątek</string>
+    <string name="day_saturday_full">Sobota</string>
+    <string name="day_sunday_full">Niedziela</string>
 
     <!-- Appointments Page -->
     <string name="appointments_title">Wizyty</string>
@@ -199,6 +219,11 @@
     <string name="medication_notifications_disable_title">Wyłączyć powiadomienia?</string>
     <string name="medication_notifications_disable_message">Czy na pewno chcesz wyłączyć powiadomienia dla leku \"%s\"?</string>
     <string name="medication_notifications_disable_confirm">Tak, wyłącz</string>
+    <string name="medication_empty_title">Lek się skończył</string>
+    <string name="medication_empty_message">Skończyły się zapasy leku \"%s\". Co chcesz zrobić?</string>
+    <string name="medication_archive">Archiwizuj</string>
+    <string name="medication_delete">Usuń lek</string>
+    <string name="medication_out_of_stock">Brak</string>
 
     <!-- Appointment Dialogs -->
     <string name="appointment_delete_title">Usunąć wizytę?</string>
