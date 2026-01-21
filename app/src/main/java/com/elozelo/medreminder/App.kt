@@ -36,6 +36,7 @@ fun App(
     languageViewModel: LanguageViewModel = viewModel()
 ) {
     val selectedRoute = remember { mutableStateOf(NavRoutes.Home.route) }
+    val expandedAppointmentId = remember { mutableStateOf<String?>(null) }
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
 
     androidx.compose.runtime.key(currentLanguage) {
@@ -53,10 +54,18 @@ fun App(
                     NavRoutes.Home.route -> HomePage(
                         paddingValues = paddingValues,
                         onNavigateToMedications = { selectedRoute.value = NavRoutes.Medications.route },
-                        onNavigateToAppointments = { selectedRoute.value = NavRoutes.Reminders.route }
+                        onNavigateToAppointments = { selectedRoute.value = NavRoutes.Reminders.route },
+                        onNavigateToAppointmentWithId = { appointmentId ->
+                            expandedAppointmentId.value = appointmentId
+                            selectedRoute.value = NavRoutes.Reminders.route
+                        }
                     )
                     NavRoutes.Medications.route -> MedicationsPage(paddingValues = paddingValues)
-                    NavRoutes.Reminders.route -> AppointmentPage(paddingValues = paddingValues)
+                    NavRoutes.Reminders.route -> AppointmentPage(
+                        paddingValues = paddingValues,
+                        expandedAppointmentId = expandedAppointmentId.value,
+                        onAppointmentExpanded = { expandedAppointmentId.value = null }
+                    )
                     NavRoutes.Settings.route -> SettingsPage(
                         themeViewModel = themeViewModel,
                         languageViewModel = languageViewModel,

@@ -33,7 +33,9 @@ import java.util.concurrent.TimeUnit
 @Composable
 fun AppointmentPage(
     viewModel: AppointmentViewModel = viewModel(),
-    paddingValues: PaddingValues = PaddingValues()
+    paddingValues: PaddingValues = PaddingValues(),
+    expandedAppointmentId: String? = null,
+    onAppointmentExpanded: () -> Unit = {}
 ) {
     val appointments by viewModel.appointments.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -42,10 +44,11 @@ fun AppointmentPage(
     var showAddDialog by remember { mutableStateOf(false) }
     var appointmentToEdit by remember { mutableStateOf<Appointment?>(null) }
     var showHistory by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
 
     // Filtrowanie i sortowanie wizyt
-    val filteredAppointments = remember(appointments, showHistory) {
-        if (showHistory) {
+    val filteredAppointments = remember(appointments, showHistory, searchQuery) {
+        val baseList = if (showHistory) {
             // Historia - wizyt odbyte, sortowane od najnowszej
             appointments.filter { it.completed }
                 .sortedByDescending { it.dateTime }
@@ -53,6 +56,13 @@ fun AppointmentPage(
             // Aktualne - nieodbyte, sortowane chronologicznie od najbliższej
             appointments.filter { !it.completed }
                 .sortedBy { it.dateTime }
+        }
+
+        // Filtrowanie po wyszukiwaniu
+        if (searchQuery.isBlank()) {
+            baseList
+        } else {
+            baseList.filter { it.name.contains(searchQuery, ignoreCase = true) }
         }
     }
 
@@ -94,6 +104,28 @@ fun AppointmentPage(
                 }
             }
 
+            // Pole wyszukiwania
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                placeholder = { Text(stringResource(R.string.search_appointments)) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.search_clear))
+                        }
+                    }
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             if (isLoading && appointments.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -101,7 +133,11 @@ fun AppointmentPage(
             } else if (filteredAppointments.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        if (showHistory) stringResource(R.string.appointments_no_completed) else stringResource(R.string.appointments_no_scheduled),
+                        when {
+                            searchQuery.isNotEmpty() -> stringResource(R.string.search_no_results)
+                            showHistory -> stringResource(R.string.appointments_no_completed)
+                            else -> stringResource(R.string.appointments_no_scheduled)
+                        },
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -112,11 +148,18 @@ fun AppointmentPage(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(filteredAppointments) { appointment ->
+                        val shouldBeExpanded = expandedAppointmentId == appointment.id
                         AppointmentItem(
                             appointment = appointment,
                             onDelete = { viewModel.deleteAppointment(appointment.id) },
                             onClick = { appointmentToEdit = appointment },
-                            onMarkCompleted = { viewModel.markAppointmentCompleted(appointment) }
+                            onMarkCompleted = { viewModel.markAppointmentCompleted(appointment) },
+                            initiallyExpanded = shouldBeExpanded,
+                            onExpandedChanged = {
+                                if (shouldBeExpanded) {
+                                    onAppointmentExpanded()
+                                }
+                            }
                         )
                     }
                 }
@@ -163,9 +206,26 @@ private fun AppointmentItem(
     appointment: Appointment,
     onDelete: () -> Unit,
     onClick: () -> Unit,
-    onMarkCompleted: () -> Unit = {}
+    onMarkCompleted: () -> Unit = {},
+    initiallyExpanded: Boolean = false,
+    onExpandedChanged: () -> Unit = {}
 ) {
-    val daysUntil = TimeUnit.MILLISECONDS.toDays(appointment.dateTime - System.currentTimeMillis())
+    val daysUntil = remember(appointment.dateTime) {
+        val todayCalendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val appointmentCalendar = Calendar.getInstance().apply {
+            timeInMillis = appointment.dateTime
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        (appointmentCalendar.timeInMillis - todayCalendar.timeInMillis) / (1000 * 60 * 60 * 24)
+    }
     val isUrgent = daysUntil < 3 && daysUntil >= 0
     val isPast = appointment.dateTime < System.currentTimeMillis()
 
@@ -178,7 +238,14 @@ private fun AppointmentItem(
     }
 
     // Stan rozwinięcia karty
-    var isExpanded by remember { mutableStateOf(false) }
+    var isExpanded by remember { mutableStateOf(initiallyExpanded) }
+
+    // Wywołaj onExpandedChanged gdy komponent się zamontuje i ma być rozwinięty
+    LaunchedEffect(initiallyExpanded) {
+        if (initiallyExpanded) {
+            onExpandedChanged()
+        }
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),

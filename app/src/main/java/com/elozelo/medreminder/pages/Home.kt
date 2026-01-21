@@ -37,7 +37,8 @@ fun HomePage(
     medicationViewModel: MedicationViewModel = viewModel(),
     appointmentViewModel: AppointmentViewModel = viewModel(),
     onNavigateToMedications: () -> Unit = {},
-    onNavigateToAppointments: () -> Unit = {}
+    onNavigateToAppointments: () -> Unit = {},
+    onNavigateToAppointmentWithId: (String) -> Unit = {}
 ) {
     val medications by medicationViewModel.medications.collectAsState()
     val appointments by appointmentViewModel.appointments.collectAsState()
@@ -76,7 +77,12 @@ fun HomePage(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        UpcomingAppointmentsSection(appointments, isLoadingAppts, onNavigateToAppointments)
+        UpcomingAppointmentsSection(
+            appointments = appointments,
+            isLoading = isLoadingAppts,
+            onNavigateToAppointments = onNavigateToAppointments,
+            onNavigateToAppointmentWithId = onNavigateToAppointmentWithId
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -610,7 +616,12 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
 }
 
 @Composable
-private fun UpcomingAppointmentsSection(appointments: List<Appointment>, isLoading: Boolean, onNavigateToAppointments: () -> Unit) {
+private fun UpcomingAppointmentsSection(
+    appointments: List<Appointment>,
+    isLoading: Boolean,
+    onNavigateToAppointments: () -> Unit,
+    onNavigateToAppointmentWithId: (String) -> Unit
+) {
     val upcomingAppointments = appointments
         .filter { it.dateTime > System.currentTimeMillis() && !it.completed }
         .sortedBy { it.dateTime }
@@ -645,19 +656,39 @@ private fun UpcomingAppointmentsSection(appointments: List<Appointment>, isLoadi
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             upcomingAppointments.forEach { appointment ->
-                AppointmentCard(appointment)
+                AppointmentCard(
+                    appointment = appointment,
+                    onClick = { onNavigateToAppointmentWithId(appointment.id) }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun AppointmentCard(appointment: Appointment) {
-    val daysUntil = ((appointment.dateTime - System.currentTimeMillis()) / (1000 * 60 * 60 * 24)).toInt()
+private fun AppointmentCard(appointment: Appointment, onClick: () -> Unit = {}) {
+    val daysUntil = remember(appointment.dateTime) {
+        val todayCalendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val appointmentCalendar = Calendar.getInstance().apply {
+            timeInMillis = appointment.dateTime
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        ((appointmentCalendar.timeInMillis - todayCalendar.timeInMillis) / (1000 * 60 * 60 * 24)).toInt()
+    }
     val isUrgent = daysUntil < 3
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -1025,8 +1056,22 @@ private fun formatAppointmentDate(timestamp: Long): String {
 
 @Composable
 private fun getDaysUntilAppointment(timestamp: Long): String {
-    val now = System.currentTimeMillis()
-    val diffInMillis = timestamp - now
+    val todayCalendar = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+
+    val appointmentCalendar = Calendar.getInstance().apply {
+        timeInMillis = timestamp
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+
+    val diffInMillis = appointmentCalendar.timeInMillis - todayCalendar.timeInMillis
     val diffInDays = (diffInMillis / (1000 * 60 * 60 * 24)).toInt()
 
     return when (diffInDays) {

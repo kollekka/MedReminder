@@ -204,5 +204,11 @@
     <string name="appointment_delete_title">Usunąć wizytę?</string>
     <string name="appointment_delete_message">Czy na pewno chcesz usunąć wizytę \"%s\"?</string>
     <string name="appointment_delete_confirm">Tak, usuń</string>
+
+    <!-- Search -->
+    <string name="search_medications">Szukaj leków…</string>
+    <string name="search_appointments">Szukaj wizyt…</string>
+    <string name="search_clear">Wyczyść</string>
+    <string name="search_no_results">Brak wyników</string>
 </resources>
 

@@ -44,10 +44,11 @@ fun MedicationsPage(
     var showAddDialog by remember { mutableStateOf(false) }
     var medicationToEdit by remember { mutableStateOf<Medication?>(null) }
     var showEmpty by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
 
     // Filtrowanie i sortowanie leków
-    val filteredMedications = remember(medications, showEmpty) {
-        if (showEmpty) {
+    val filteredMedications = remember(medications, showEmpty, searchQuery) {
+        val baseList = if (showEmpty) {
             // Puste - leki ze stanem 0, sortowane alfabetycznie
             medications.filter { it.remainingQuantity == 0 }
                 .sortedBy { it.name.lowercase() }
@@ -104,6 +105,13 @@ fun MedicationsPage(
                         .minOrNull() ?: Int.MAX_VALUE)
                 }
         }
+
+        // Filtrowanie po wyszukiwaniu
+        if (searchQuery.isBlank()) {
+            baseList
+        } else {
+            baseList.filter { it.name.contains(searchQuery, ignoreCase = true) }
+        }
     }
 
     Box(modifier = Modifier
@@ -144,6 +152,28 @@ fun MedicationsPage(
                 }
             }
 
+            // Pole wyszukiwania
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                placeholder = { Text(stringResource(R.string.search_medications)) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.search_clear))
+                        }
+                    }
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             if (isLoading && medications.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -151,7 +181,11 @@ fun MedicationsPage(
             } else if (filteredMedications.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        if (showEmpty) stringResource(R.string.medications_no_empty) else stringResource(R.string.medications_no_added),
+                        when {
+                            searchQuery.isNotEmpty() -> stringResource(R.string.search_no_results)
+                            showEmpty -> stringResource(R.string.medications_no_empty)
+                            else -> stringResource(R.string.medications_no_added)
+                        },
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
