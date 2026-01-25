@@ -26,6 +26,7 @@ import com.elozelo.medreminder.R
 import com.elozelo.medreminder.data.model.Appointment
 import com.elozelo.medreminder.data.model.Medication
 import com.elozelo.medreminder.ui.theme.MedReminderTheme
+import com.elozelo.medreminder.ui.theme.WarmOrangeDeep
 import com.elozelo.medreminder.viewmodel.AppointmentViewModel
 import com.elozelo.medreminder.viewmodel.MedicationViewModel
 import java.text.SimpleDateFormat
@@ -184,7 +185,7 @@ private fun DashboardGrid(
                 title = stringResource(R.string.home_medications_today),
                 value = if (allTaken) "✓" else todayMedications.size.toString(),
                 icon = Icons.Default.Medication,
-                color = if (allTaken) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
+                color = if (allTaken) MaterialTheme.colorScheme.primary else WarmOrangeDeep,
                 onClick = onNavigateToMedications
             )
 
@@ -277,7 +278,7 @@ private fun DashboardCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2
                 )
             }
@@ -710,7 +711,7 @@ private fun UpcomingAppointmentsSection(
 
     SectionHeader(
         title = stringResource(R.string.home_upcoming_appointments),
-        showViewAll = true,
+        showViewAll = appointments.isNotEmpty(),
         onViewAllClick = onNavigateToAppointments
     )
 
@@ -842,69 +843,6 @@ private fun AppointmentCard(appointment: Appointment, onClick: () -> Unit = {}) 
                         color = if (isUrgent) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun LowStockCard(medication: Medication) {
-    Card(
-        modifier = Modifier.width(150.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row {
-            // Czerwony pasek boczny
-            Box(
-                modifier = Modifier
-                    .width(4.dp)
-                    .height(80.dp)
-                    .background(MaterialTheme.colorScheme.error)
-            )
-
-            Column(
-                modifier = Modifier.padding(12.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.errorContainer,
-                                shape = RoundedCornerShape(8.dp)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = medication.name,
-                        style = MaterialTheme.typography.titleSmall,
-                        maxLines = 1,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = if (medication.remainingQuantity == 0)
-                        stringResource(R.string.medication_out_of_stock)
-                    else
-                        "${stringResource(R.string.home_remaining)}: ${medication.remainingQuantity}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
             }
         }
     }

@@ -20,5 +20,7 @@ val MedicalDarkSurface = Color(0xFF1E1E1E)
 val MedicalDarkCard = Color(0xFF252525)
 
 val WarmOrangeDark = Color(0xFFFFB74D)
+val WarmOrangeSoft = Color(0xFFFF9800)  // Jaśniejszy pomarańczowy dla navbara
+val WarmOrangeDeep = Color(0xFFE65100)  // Ciemniejszy pomarańczowy dla kafelka Leki dzisiaj
 
 

@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.elozelo.medreminder.ui.theme.WarmOrangeSoft
 
 
 data class NavPage(var nameResId: Int, var route: String, var icon: ImageVector)
@@ -51,13 +52,13 @@ private fun NavBarItem(page: NavPage, modifier: Modifier = Modifier, selected: B
                 .padding(8.dp)
                 .size(24.dp),
             colorFilter = ColorFilter.tint(
-                if (selected) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onPrimary
+                if (selected) WarmOrangeSoft else MaterialTheme.colorScheme.onPrimary
             ),
         )
         Text(
             text = stringResource(id = page.nameResId),
             fontSize = 14.sp,
-            color = if (selected) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onPrimary
+            color = if (selected) WarmOrangeSoft else MaterialTheme.colorScheme.onPrimary
         )
     }
 }
