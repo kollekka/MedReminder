@@ -23,7 +23,7 @@ class AppointmentReminderWorker(
             return Result.failure()
         }
 
-        // Pobierz kontekst z prawidłowym Locale
+
         val localizedContext = getLocalizedContext()
 
         val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())

@@ -47,7 +47,6 @@ fun SettingsPage(
             modifier = Modifier.padding(16.dp)
         )
 
-        // Sekcja Wygląd
         Text(
             text = stringResource(R.string.settings_appearance),
             style = MaterialTheme.typography.labelLarge,
@@ -104,7 +103,6 @@ fun SettingsPage(
             }
         }
 
-        // Sekcja Język
         Text(
             text = stringResource(R.string.settings_language),
             style = MaterialTheme.typography.labelLarge,
@@ -159,7 +157,6 @@ fun SettingsPage(
             }
         }
 
-        // Sekcja Informacje
         Text(
             text = stringResource(R.string.settings_info),
             style = MaterialTheme.typography.labelLarge,
@@ -192,14 +189,12 @@ fun SettingsPage(
             }
         }
 
-        // Dialog wyboru języka
         if (showLanguageDialog) {
             LanguageSelectionDialog(
                 currentLanguage = currentLanguage,
                 onLanguageSelected = { language ->
                     if (language != currentLanguage) {
                         languageViewModel.setLanguage(language)
-                        // Restartuj Activity, aby zastosować nowy język
                         (context as? Activity)?.recreate()
                     }
                     showLanguageDialog = false
@@ -221,7 +216,6 @@ private fun LanguageSelectionDialog(
         title = { Text(stringResource(R.string.language_dialog_title)) },
         text = {
             Column {
-                // Opcja Polski
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -243,8 +237,6 @@ private fun LanguageSelectionDialog(
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
-
-                // Opcja Angielski
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

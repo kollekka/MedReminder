@@ -70,7 +70,6 @@ class AppointmentViewModel(application: Application) : AndroidViewModel(applicat
                 }
                 _appointments.value = apptList
 
-                // Zaplanuj przypomnienia dla wszystkich wizyt z włączonymi przypomnieniami
                 apptList.forEach { appointment ->
                     if (appointment.reminderEnabled && appointment.dateTime > System.currentTimeMillis()) {
                         ReminderScheduler.scheduleAppointmentReminders(getApplication(), appointment)
@@ -90,7 +89,6 @@ class AppointmentViewModel(application: Application) : AndroidViewModel(applicat
         collectionRef.add(appointment)
             .addOnSuccessListener { documentReference ->
                 val appointmentWithId = appointment.copy(id = documentReference.id)
-                // Zaplanuj przypomnienia
                 ReminderScheduler.scheduleAppointmentReminders(getApplication(), appointmentWithId)
             }
             .addOnFailureListener { e ->
@@ -107,7 +105,6 @@ class AppointmentViewModel(application: Application) : AndroidViewModel(applicat
 
         collectionRef.document(appointment.id).set(appointment)
             .addOnSuccessListener {
-                // Zaktualizuj przypomnienia
                 ReminderScheduler.scheduleAppointmentReminders(getApplication(), appointment)
             }
             .addOnFailureListener { e ->
@@ -124,7 +121,6 @@ class AppointmentViewModel(application: Application) : AndroidViewModel(applicat
 
         collectionRef.document(appointmentId).delete()
             .addOnSuccessListener {
-                // Anuluj przypomnienia
                 ReminderScheduler.cancelAppointmentReminders(getApplication(), appointmentId)
             }
             .addOnFailureListener { e ->
@@ -147,7 +143,4 @@ class AppointmentViewModel(application: Application) : AndroidViewModel(applicat
             }
     }
 
-    fun clearError() {
-        _errorMessage.value = null
-    }
 }

@@ -20,13 +20,12 @@ class MedicationReminderWorker(
         val quantity = inputData.getInt("quantity", 0)
         val timeString = inputData.getString("timeString") ?: return Result.failure()
 
-        // Pobierz kontekst z prawidłowym Locale
         val localizedContext = getLocalizedContext()
 
         val dosageUnit = try {
             DosageUnit.valueOf(dosageEnumName)
         } catch (e: IllegalArgumentException) {
-            DosageUnit.PILLS // fallback
+            DosageUnit.PILLS
         }
         val localizedDosage = dosageUnit.getLocalizedName(localizedContext)
 

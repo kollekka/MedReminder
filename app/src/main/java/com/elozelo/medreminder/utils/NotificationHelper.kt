@@ -20,7 +20,6 @@ object NotificationHelper {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-            // Kanał dla wizyt
             val appointmentChannel = NotificationChannel(
                 CHANNEL_ID,
                 context.getString(R.string.notification_channel_appointments),

@@ -6,9 +6,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Ulepszona typografia z lepszą hierarchią wizualną
+
 val Typography = Typography(
-    // Headlines - Bold, większe
     headlineLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
@@ -31,7 +30,6 @@ val Typography = Typography(
         letterSpacing = 0.sp
     ),
 
-    // Titles - SemiBold, średnie
     titleLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.SemiBold,

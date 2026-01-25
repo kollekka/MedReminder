@@ -69,19 +69,16 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
             if (snapshot != null) {
                 val medsList = snapshot.documents.mapNotNull { doc ->
                     try {
-                        // Robust Dosage parsing
                         val dosageStr = doc.getString("dosage")
                         val dosage = dosageStr?.let {
                             try { DosageUnit.valueOf(it.uppercase()) } catch (e: IllegalArgumentException) { null }
-                        } ?: DosageUnit.PILLS // default
+                        } ?: DosageUnit.PILLS
 
-                        // Robust Frequency parsing
                         val freqStr = doc.getString("frequency")
                         val frequency = freqStr?.let {
                             try { frequencyUnit.valueOf(it.uppercase()) } catch (e: IllegalArgumentException) { null }
-                        } ?: frequencyUnit.DAILY // default
+                        } ?: frequencyUnit.DAILY
 
-                        // Robust Quantity parsing
                         val quantityRaw = doc.get("quantity")
                         val quantity = when (quantityRaw) {
                             is Long -> quantityRaw.toInt()
@@ -110,7 +107,6 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
                             else -> 0
                         }
 
-                        // Custom frequency options
                         val customDaysOfWeekRaw = doc.get("customDaysOfWeek") as? List<*>
                         val customDaysOfWeek = customDaysOfWeekRaw?.mapNotNull {
                             when (it) {
@@ -153,7 +149,6 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
                 }
                 _medications.value = medsList
 
-                // Zaplanuj przypomnienia dla wszystkich leków z włączonymi przypomnieniami i zapasem
                 medsList.forEach { medication ->
                     if (medication.reminderEnabled && medication.reminderTimes.isNotEmpty() && medication.remainingQuantity > 0) {
                         MedicationReminderScheduler.scheduleMedicationReminders(getApplication(), medication)
@@ -173,7 +168,6 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
         collectionRef.add(medication)
             .addOnSuccessListener { documentReference ->
                 val medicationWithId = medication.copy(id = documentReference.id)
-                // Zaplanuj przypomnienia
                 MedicationReminderScheduler.scheduleMedicationReminders(getApplication(), medicationWithId)
             }
             .addOnFailureListener { e ->
@@ -190,7 +184,6 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
 
         collectionRef.document(medication.id).set(medication)
             .addOnSuccessListener {
-                // Zaktualizuj przypomnienia
                 MedicationReminderScheduler.scheduleMedicationReminders(getApplication(), medication)
             }
             .addOnFailureListener { e ->
@@ -207,7 +200,6 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
 
         collectionRef.document(medicationId).delete()
             .addOnSuccessListener {
-                // Anuluj przypomnienia
                 MedicationReminderScheduler.cancelMedicationReminders(getApplication(), medicationId)
             }
             .addOnFailureListener { e ->
@@ -224,7 +216,6 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
 
         val newRemaining = (medication.remainingQuantity - medication.quantity).coerceAtLeast(0)
 
-        // Pobierz dzisiejszą datę w formacie yyyy-MM-dd
         val calendar = java.util.Calendar.getInstance()
         val today = String.format(
             "%04d-%02d-%02d",
@@ -233,21 +224,18 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
             calendar.get(java.util.Calendar.DAY_OF_MONTH)
         )
 
-        // Sprawdź czy to ta sama data co ostatnie wzięcie
         val isToday = medication.lastTakenDate == today
 
-        // Zaktualizuj licznik dziennych wzięć
         val newDailyCount = if (isToday) {
             medication.dailyTakenCount + 1
         } else {
-            1 // Reset licznika na nowy dzień
+            1
         }
 
         val currentHour = calendar.get(java.util.Calendar.HOUR_OF_DAY)
         val currentMinute = calendar.get(java.util.Calendar.MINUTE)
         val currentTimeInMinutes = currentHour * 60 + currentMinute
 
-        // Znajdź aktualnie braną godzinę
         val currentTakingTime = if (medication.lastTakenTime != null && isToday) {
             val lastParts = medication.lastTakenTime.split(":")
             if (lastParts.size == 2) {
@@ -256,7 +244,7 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
                 lastHour * 60 + lastMinute
             } else currentTimeInMinutes
         } else {
-            // Nowy dzień lub brak lastTakenTime - znajdź najbliższą godzinę przypomnienia
+
             medication.reminderTimes
                 .mapNotNull { timeString ->
                     val parts = timeString.split(":")
@@ -270,7 +258,7 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
                 .minOrNull() ?: currentTimeInMinutes
         }
 
-        // Znajdź następną godzinę przypomnienia (po aktualnie branej)
+
         val nextReminderTime = medication.reminderTimes
             .mapNotNull { timeString ->
                 val parts = timeString.split(":")
@@ -309,7 +297,6 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
             return
         }
 
-        // Przywróć zapas do początkowej wartości i zresetuj licznik dziennych dawek
         val updatedMedication = medication.copy(
             remainingQuantity = medication.initialQuantity,
             dailyTakenCount = 0,
@@ -319,7 +306,6 @@ class MedicationViewModel(application: Application) : AndroidViewModel(applicati
 
         collectionRef.document(medication.id).set(updatedMedication)
             .addOnSuccessListener {
-                // Zaplanuj przypomnienia ponownie
                 MedicationReminderScheduler.scheduleMedicationReminders(getApplication(), updatedMedication)
             }
             .addOnFailureListener { e ->

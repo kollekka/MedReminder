@@ -52,14 +52,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Inicjalizacja Firebase Auth
         auth = FirebaseAuth.getInstance()
 
-        // Inicjalizacja ViewModels
         themeViewModel = ViewModelProvider(this)[ThemeViewModel::class.java]
         languageViewModel = ViewModelProvider(this)[LanguageViewModel::class.java]
 
-        // Sprawdź i poproś o uprawnienia do powiadomień (Android 13+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when {
                 ContextCompat.checkSelfPermission(
@@ -69,13 +66,12 @@ class MainActivity : ComponentActivity() {
                     Log.d("MedReminder", "Uprawnienie do powiadomień już przyznane")
                 }
                 else -> {
-                    // Poproś o uprawnienie
                     requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
         }
 
-        // Automatyczne logowanie anonimowe jeśli użytkownik nie jest zalogowany
+
         if (auth.currentUser == null) {
             auth.signInAnonymously()
                 .addOnSuccessListener { authResult ->
@@ -122,7 +118,6 @@ class MainActivity : ComponentActivity() {
 
     @Suppress("DEPRECATION")
     private fun updateLocaleContext(context: Context): Context {
-        // Odczytaj język synchronicznie z DataStore
         val languageCode = runBlocking {
             try {
                 context.languageDataStore.data.first()[LanguagePreferences.LANGUAGE_KEY]

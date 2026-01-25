@@ -13,7 +13,6 @@ class BootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            // Przywróć wszystkie alarmy po restarcie urządzenia
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val repository = MedicationRepository()

@@ -42,8 +42,6 @@ class MedicationAlarmReceiver : BroadcastReceiver() {
                 timeString = timeString
             )
 
-            // Po wyświetleniu powiadomienia, zaplanuj następne
-            // Pobierz aktualny stan leku z bazy danych
             try {
                 val repository = MedicationRepository()
                 val medications = repository.getMedications().first()

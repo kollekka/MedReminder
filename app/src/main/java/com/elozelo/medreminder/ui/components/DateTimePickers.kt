@@ -8,9 +8,6 @@ import com.elozelo.medreminder.R
 import java.text.SimpleDateFormat
 import java.util.*
 
-/**
- * Date Picker Dialog zgodny z Material 3
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerDialog(
@@ -57,9 +54,6 @@ fun DatePickerDialog(
     }
 }
 
-/**
- * Time Picker Dialog zgodny z Material 3
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerDialog(
@@ -96,18 +90,10 @@ fun TimePickerDialog(
         }
     )
 }
-
-/**
- * Formatuje timestamp do czytelnej daty
- */
 fun formatDate(timestamp: Long): String {
     val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale("pl", "PL"))
     return dateFormat.format(Date(timestamp))
 }
-
-/**
- * Konwertuje godzinę i minutę na String "HH:mm"
- */
 fun formatTime(hour: Int, minute: Int): String {
     return String.format("%02d:%02d", hour, minute)
 }

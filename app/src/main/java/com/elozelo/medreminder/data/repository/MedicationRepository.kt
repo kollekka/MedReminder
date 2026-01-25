@@ -72,9 +72,6 @@ class MedicationRepository {
         }
     }
 
-    /**
-     * Aktualizuje istniejący lek (tylko jeśli należy do użytkownika)
-     */
     suspend fun updateMedication(medication: Medication): Result<Unit> {
         return try {
             val userId = auth.currentUser?.uid
@@ -94,9 +91,6 @@ class MedicationRepository {
         }
     }
 
-    /**
-     * Usuwa lek z Firebase (tylko jeśli należy do użytkownika)
-     */
     suspend fun deleteMedication(id: String): Result<Unit> {
         return try {
             val userId = auth.currentUser?.uid
@@ -115,9 +109,6 @@ class MedicationRepository {
         }
     }
 
-    /**
-     * Pobiera leki użytkownika, które mają aktywne przypomnienia
-     */
     fun getActiveMedications(): Flow<List<Medication>> = callbackFlow {
         val userId = auth.currentUser?.uid
         if (userId == null) {

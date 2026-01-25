@@ -53,12 +53,10 @@ fun HomePage(
     ) {
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Sekcja powitalna
         WelcomeSection()
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Dashboard Grid - szybki podgląd statystyk
         DashboardGrid(
             medications = medications,
             appointments = appointments,
@@ -93,7 +91,7 @@ private fun WelcomeSection() {
     val calendar = Calendar.getInstance()
     val hour = calendar.get(Calendar.HOUR_OF_DAY)
 
-    // Powitanie zależne od pory dnia
+
     val greeting = when {
         hour < 6 -> stringResource(R.string.home_greeting_night)
         hour < 12 -> stringResource(R.string.home_greeting_morning)
@@ -101,7 +99,7 @@ private fun WelcomeSection() {
         else -> stringResource(R.string.home_greeting_evening)
     }
 
-    // Ikona zależna od pory dnia
+
     val icon = when {
         hour < 6 -> Icons.Default.NightsStay
         hour < 12 -> Icons.Default.WbSunny
@@ -176,12 +174,11 @@ private fun DashboardGrid(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Pierwszy rząd
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Leki dzisiaj
             DashboardCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.home_medications_today),
@@ -191,7 +188,6 @@ private fun DashboardGrid(
                 onClick = onNavigateToMedications
             )
 
-            // Nadchodzące wizyty
             DashboardCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.home_upcoming_appointments),
@@ -202,12 +198,11 @@ private fun DashboardGrid(
             )
         }
 
-        // Drugi rząd
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Aktywne leki
+
             DashboardCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.home_active_medications),
@@ -217,7 +212,6 @@ private fun DashboardGrid(
                 onClick = onNavigateToMedications
             )
 
-            // Kończące się leki
             DashboardCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.home_low_stock_medications),
@@ -253,7 +247,6 @@ private fun DashboardCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Kolorowa ikona
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -373,11 +366,9 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
     var showConfirmDialog by remember { mutableStateOf(false) }
     var showAlreadyTakenWarningDialog by remember { mutableStateOf(false) }
     var showEmptyMedicationDialog by remember { mutableStateOf(false) }
-
-    // Lokalny licznik wzięć w tej sesji (resetowany przy zmianie medication.id)
     var localTakenCount by remember(medication.id) { mutableStateOf(0) }
 
-    // Sprawdź czy lek był już dzisiaj wzięty
+
     val calendar = Calendar.getInstance()
     val today = String.format(
         "%04d-%02d-%02d",
@@ -394,7 +385,6 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row {
-            // Niebieski pasek boczny
             Box(
                 modifier = Modifier
                     .width(4.dp)
@@ -482,7 +472,6 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
         }
     }
 
-    // Dialog potwierdzający wzięcie leku (standardowy)
     if (showConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
@@ -534,9 +523,8 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
                     Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = {
-                            // Oblicz efektywną pozostałą ilość z uwzględnieniem lokalnych wzięć
+
                             val effectiveRemaining = medication.remainingQuantity - (localTakenCount * medication.quantity)
-                            // Sprawdź czy PO wzięciu tej dawki zostanie 0 lub mniej
                             val remainingAfterTaking = effectiveRemaining - medication.quantity
                             val willBeEmpty = remainingAfterTaking <= 0
 
@@ -559,7 +547,6 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
         )
     }
 
-    // Dialog ostrzegawczy - lek już dzisiaj wzięty
     if (showAlreadyTakenWarningDialog) {
         AlertDialog(
             onDismissRequest = { showAlreadyTakenWarningDialog = false },
@@ -611,9 +598,7 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
                     Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = {
-                            // Oblicz efektywną pozostałą ilość z uwzględnieniem lokalnych wzięć
                             val effectiveRemaining = medication.remainingQuantity - (localTakenCount * medication.quantity)
-                            // Sprawdź czy PO wzięciu tej dawki zostanie 0 lub mniej
                             val remainingAfterTaking = effectiveRemaining - medication.quantity
                             val willBeEmpty = remainingAfterTaking <= 0
 
@@ -636,7 +621,7 @@ private fun MedicationTodayCard(medication: Medication, medicationViewModel: Med
         )
     }
 
-    // Dialog - lek się skończył
+
     if (showEmptyMedicationDialog) {
         AlertDialog(
             onDismissRequest = { showEmptyMedicationDialog = false },
@@ -790,7 +775,6 @@ private fun AppointmentCard(appointment: Appointment, onClick: () -> Unit = {}) 
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row {
-            // Kolorowy pasek boczny
             Box(
                 modifier = Modifier
                     .width(4.dp)
@@ -973,7 +957,6 @@ private fun EmptyStateCard(
     }
 }
 
-// Funkcje pomocnicze
 private fun getMedicationsForToday(medications: List<Medication>): List<Medication> {
     return medications.filter { medication ->
         medication.reminderEnabled && medication.reminderTimes.isNotEmpty()
@@ -986,7 +969,6 @@ private fun getMedicationsForTodaySorted(medications: List<Medication>): List<Me
     val currentMinute = calendar.get(Calendar.MINUTE)
     val currentTimeInMinutes = currentHour * 60 + currentMinute
 
-    // Pobierz dzisiejszą datę
     val today = String.format(
         "%04d-%02d-%02d",
         calendar.get(Calendar.YEAR),
@@ -998,10 +980,8 @@ private fun getMedicationsForTodaySorted(medications: List<Medication>): List<Me
         medication.reminderEnabled &&
         medication.reminderTimes.isNotEmpty() &&
         medication.remainingQuantity > 0 &&
-        // Sprawdź czy nie przekroczono dziennego limitu dawek
         (medication.lastTakenDate != today || medication.dailyTakenCount < medication.reminderTimes.size)
     }.sortedBy { medication ->
-        // Sortuj według najbliższej godziny przypomnienia
         medication.reminderTimes
             .mapNotNull { timeString ->
                 val parts = timeString.split(":")
@@ -1010,7 +990,6 @@ private fun getMedicationsForTodaySorted(medications: List<Medication>): List<Me
                     val minute = parts[1].toIntOrNull() ?: return@mapNotNull null
                     val timeInMinutes = hour * 60 + minute
 
-                    // Jeśli to dzisiaj i mamy lastTakenTime, szukaj następnej godziny po niej
                     if (medication.lastTakenDate == today && medication.lastTakenTime != null) {
                         val lastParts = medication.lastTakenTime.split(":")
                         if (lastParts.size == 2) {
@@ -1020,7 +999,6 @@ private fun getMedicationsForTodaySorted(medications: List<Medication>): List<Me
                             if (timeInMinutes >= lastTimeInMinutes) timeInMinutes else null
                         } else timeInMinutes
                     } else {
-                        // Nowy dzień lub brak lastTakenTime - pokaż przyszłe lub aktualne godziny
                         if (timeInMinutes >= currentTimeInMinutes - 30) timeInMinutes else null
                     }
                 } else null
@@ -1033,17 +1011,11 @@ private fun getNextReminderTime(medication: Medication): String? {
     return getCurrentReminderTimeWithStatus(medication)?.first
 }
 
-/**
- * Zwraca parę (godzina przypomnienia, czy czas minął)
- * Jeśli czas minął, zwraca najbliższą nieobsłużoną godzinę z flagą isPast=true
- */
 private fun getCurrentReminderTimeWithStatus(medication: Medication): Pair<String, Boolean>? {
     val calendar = Calendar.getInstance()
     val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
     val currentMinute = calendar.get(Calendar.MINUTE)
     val currentTimeInMinutes = currentHour * 60 + currentMinute
-
-    // Pobierz dzisiejszą datę
     val today = String.format(
         "%04d-%02d-%02d",
         calendar.get(Calendar.YEAR),
@@ -1051,7 +1023,6 @@ private fun getCurrentReminderTimeWithStatus(medication: Medication): Pair<Strin
         calendar.get(Calendar.DAY_OF_MONTH)
     )
 
-    // Pobierz wszystkie godziny z informacją o czasie
     val timesWithInfo = medication.reminderTimes
         .mapNotNull { timeString ->
             val parts = timeString.split(":")
@@ -1064,7 +1035,6 @@ private fun getCurrentReminderTimeWithStatus(medication: Medication): Pair<Strin
         }
         .sortedBy { it.second }
 
-    // Jeśli to dzisiaj i mamy lastTakenTime, szukaj następnej godziny po ostatnim wzięciu
     if (medication.lastTakenDate == today && medication.lastTakenTime != null) {
         val lastParts = medication.lastTakenTime.split(":")
         if (lastParts.size == 2) {
@@ -1072,21 +1042,19 @@ private fun getCurrentReminderTimeWithStatus(medication: Medication): Pair<Strin
             val lastMinute = lastParts[1].toIntOrNull() ?: 0
             val lastTimeInMinutes = lastHour * 60 + lastMinute
 
-            // Znajdź następną godzinę po ostatnim wzięciu
+
             val nextTime = timesWithInfo.find { it.second > lastTimeInMinutes }
             if (nextTime != null) {
                 return Pair(nextTime.first, nextTime.third)
             }
         }
     } else {
-        // Nowy dzień lub brak lastTakenTime
-        // Najpierw szukaj przyszłych godzin
+
         val futureTime = timesWithInfo.find { !it.third }
         if (futureTime != null) {
             return Pair(futureTime.first, false)
         }
 
-        // Jeśli nie ma przyszłych, zwróć pierwszą godzinę jako przeszłą
         val pastTime = timesWithInfo.firstOrNull()
         if (pastTime != null) {
             return Pair(pastTime.first, true)
@@ -1105,19 +1073,16 @@ private fun areAllTodayMedicationsTaken(medications: List<Medication>): Boolean 
         calendar.get(Calendar.DAY_OF_MONTH)
     )
 
-    // Znajdź wszystkie leki które powinny być wzięte dzisiaj
     val todayMedications = medications.filter { medication ->
         medication.reminderEnabled &&
         medication.reminderTimes.isNotEmpty() &&
         medication.remainingQuantity > 0
     }
 
-    // Jeśli nie ma żadnych leków na dzisiaj, zwróć false
     if (todayMedications.isEmpty()) {
         return false
     }
 
-    // Sprawdź czy wszystkie leki na dzisiaj zostały wzięte
     return todayMedications.all { medication ->
         medication.lastTakenDate == today &&
         medication.dailyTakenCount >= medication.reminderTimes.size

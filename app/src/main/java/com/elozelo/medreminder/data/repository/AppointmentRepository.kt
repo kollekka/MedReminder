@@ -44,9 +44,6 @@ class AppointmentRepository {
         awaitClose { listener.remove() }
     }
 
-    /**
-     * Pobiera nadchodzące wizyty użytkownika (w przyszłości)
-     */
     fun getUpcomingAppointments(): Flow<List<Appointment>> = callbackFlow {
         val userId = auth.currentUser?.uid
         if (userId == null) {
@@ -89,10 +86,6 @@ class AppointmentRepository {
             null
         }
     }
-
-    /**
-     * Dodaje nową wizytę do Firebase z userId aktualnego użytkownika
-     */
     suspend fun addAppointment(appointment: Appointment): Result<String> {
         return try {
             val userId = auth.currentUser?.uid
@@ -107,9 +100,6 @@ class AppointmentRepository {
         }
     }
 
-    /**
-     * Aktualizuje istniejącą wizytę (tylko jeśli należy do użytkownika)
-     */
     suspend fun updateAppointment(appointment: Appointment): Result<Unit> {
         return try {
             val userId = auth.currentUser?.uid
@@ -129,9 +119,6 @@ class AppointmentRepository {
         }
     }
 
-    /**
-     * Usuwa wizytę z Firebase (tylko jeśli należy do użytkownika)
-     */
     suspend fun deleteAppointment(id: String): Result<Unit> {
         return try {
             val userId = auth.currentUser?.uid

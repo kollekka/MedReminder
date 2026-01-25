@@ -7,7 +7,6 @@ class MedReminderApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        // Utwórz kanał powiadomień przy starcie aplikacji
         NotificationHelper.createNotificationChannel(this)
     }
 }

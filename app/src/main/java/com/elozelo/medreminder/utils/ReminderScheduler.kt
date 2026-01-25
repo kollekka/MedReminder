@@ -16,7 +16,6 @@ object ReminderScheduler {
         val currentTime = System.currentTimeMillis()
         val appointmentTime = appointment.dateTime
 
-        // Przypomnienie 3 dni przed
         scheduleReminder(
             context = context,
             appointment = appointment,
@@ -24,7 +23,6 @@ object ReminderScheduler {
             workTag = "${appointment.id}_3days"
         )
 
-        // Przypomnienie 1 dzień przed
         scheduleReminder(
             context = context,
             appointment = appointment,
@@ -32,7 +30,6 @@ object ReminderScheduler {
             workTag = "${appointment.id}_1day"
         )
 
-        // Przypomnienie w dniu wizyty (1 godzina przed)
         val oneHourBefore = appointmentTime - TimeUnit.HOURS.toMillis(1)
         if (oneHourBefore > currentTime) {
             val delay = oneHourBefore - currentTime
@@ -55,7 +52,6 @@ object ReminderScheduler {
         val reminderTime = appointment.dateTime - TimeUnit.DAYS.toMillis(daysBeforeAppointment.toLong())
         val currentTime = System.currentTimeMillis()
 
-        // Tylko zaplanuj, jeśli czas przypomnienia jest w przyszłości
         if (reminderTime > currentTime) {
             val delay = reminderTime - currentTime
             scheduleReminderWithDelay(

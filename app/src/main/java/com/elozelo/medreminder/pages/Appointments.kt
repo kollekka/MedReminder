@@ -46,19 +46,17 @@ fun AppointmentPage(
     var showHistory by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
-    // Filtrowanie i sortowanie wizyt
+
     val filteredAppointments = remember(appointments, showHistory, searchQuery) {
         val baseList = if (showHistory) {
-            // Historia - wizyt odbyte, sortowane od najnowszej
             appointments.filter { it.completed }
                 .sortedByDescending { it.dateTime }
         } else {
-            // Aktualne - nieodbyte, sortowane chronologicznie od najbliższej
             appointments.filter { !it.completed }
                 .sortedBy { it.dateTime }
         }
 
-        // Filtrowanie po wyszukiwaniu
+
         if (searchQuery.isBlank()) {
             baseList
         } else {
@@ -104,7 +102,6 @@ fun AppointmentPage(
                 }
             }
 
-            // Pole wyszukiwania
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -229,7 +226,6 @@ private fun AppointmentItem(
     val isUrgent = daysUntil < 3 && daysUntil >= 0
     val isPast = appointment.dateTime < System.currentTimeMillis()
 
-    // Kolor paska bocznego zależny od stanu
     val accentColor = when {
         appointment.completed -> MaterialTheme.colorScheme.outline
         isUrgent -> MaterialTheme.colorScheme.tertiary
@@ -237,10 +233,9 @@ private fun AppointmentItem(
         else -> MaterialTheme.colorScheme.secondary
     }
 
-    // Stan rozwinięcia karty
+
     var isExpanded by remember { mutableStateOf(initiallyExpanded) }
 
-    // Wywołaj onExpandedChanged gdy komponent się zamontuje i ma być rozwinięty
     LaunchedEffect(initiallyExpanded) {
         if (initiallyExpanded) {
             onExpandedChanged()
@@ -254,7 +249,6 @@ private fun AppointmentItem(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row {
-            // Kolorowy pasek boczny
             Box(
                 modifier = Modifier
                     .width(4.dp)
@@ -267,7 +261,6 @@ private fun AppointmentItem(
             )
 
             Column(modifier = Modifier.weight(1f)) {
-                // Nagłówek - klikalny do zwijania/rozwijania
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -307,12 +300,10 @@ private fun AppointmentItem(
                         }
                     }
 
-                    // Ikony po prawej stronie
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Ikona powiadomień
                         Icon(
                             imageVector = if (appointment.reminderEnabled) Icons.Default.Notifications else Icons.Default.NotificationsOff,
                             contentDescription = null,
@@ -323,7 +314,6 @@ private fun AppointmentItem(
                             modifier = Modifier.size(20.dp)
                         )
 
-                        // Ikona strzałki
                         Icon(
                             imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             contentDescription = if (isExpanded) stringResource(R.string.collapse) else stringResource(R.string.expand),
@@ -333,7 +323,6 @@ private fun AppointmentItem(
                     }
                 }
 
-                // Sekcja środkowa - zwijalna, klikalna do edycji
                 AnimatedVisibility(visible = isExpanded) {
                     Column {
                         HorizontalDivider(
@@ -348,12 +337,10 @@ private fun AppointmentItem(
                                 .padding(16.dp),
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            // Lewa kolumna - informacje
                             Column(
                                 modifier = Modifier.weight(1f),
                                 verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                // Data i godzina
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         Icons.Default.CalendarToday,
@@ -376,7 +363,6 @@ private fun AppointmentItem(
                                     }
                                 }
 
-                                // Lokalizacja
                                 if (appointment.location.isNotEmpty()) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
@@ -394,7 +380,6 @@ private fun AppointmentItem(
                                     }
                                 }
 
-                                // Dni do wizyty
                                 if (!appointment.completed && !isPast) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
@@ -417,7 +402,6 @@ private fun AppointmentItem(
                                 }
                             }
 
-                            // Prawa strona - notatki
                             if (appointment.notes.isNotEmpty()) {
                                 var showNotesDialog by remember { mutableStateOf(false) }
 
@@ -490,7 +474,6 @@ private fun AppointmentItem(
                             }
                         }
 
-                        // Dialog potwierdzenia usunięcia
                         if (showDeleteDialog) {
                             AlertDialog(
                                 onDismissRequest = { showDeleteDialog = false },

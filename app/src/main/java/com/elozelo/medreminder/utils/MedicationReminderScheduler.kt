@@ -12,7 +12,6 @@ import java.util.*
 object MedicationReminderScheduler {
 
     fun scheduleMedicationReminders(context: Context, medication: Medication) {
-        // Nie planuj przypomnień jeśli lek jest pusty, przypomnienia wyłączone lub brak godzin
         if (medication.remainingQuantity == 0 || !medication.reminderEnabled || medication.reminderTimes.isEmpty()) {
             cancelMedicationReminders(context, medication.id)
             return
@@ -50,7 +49,6 @@ object MedicationReminderScheduler {
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
 
-                // Jeśli czas już minął dzisiaj, zaplanuj na jutro
                 if (before(now)) {
                     add(Calendar.DAY_OF_MONTH, 1)
                 }
@@ -76,9 +74,6 @@ object MedicationReminderScheduler {
         timeString: String,
         index: Int
     ) {
-        // Dla codziennych przypomnień planujemy najbliższe wystąpienie
-        // AlarmManager z setRepeating nie jest dokładny, więc planujemy tylko jeden alarm
-        // i przeskalujemy go ponownie gdy się wykona (poprzez receiver lub przy starcie aplikacji)
         scheduleExactAlarm(
             context = context,
             medication = medication,
@@ -127,16 +122,13 @@ object MedicationReminderScheduler {
         timeString: String,
         index: Int
     ) {
-        // Znajdź najbliższy dzień z listy wybranych dni
         if (medication.customDaysOfWeek.isEmpty()) return
 
         val now = Calendar.getInstance()
         val reminderTime = startTime.clone() as Calendar
 
-        // Szukaj najbliższego pasującego dnia (max 7 dni do przodu)
         for (i in 0..7) {
             val dayOfWeek = reminderTime.get(Calendar.DAY_OF_WEEK)
-            // Konwersja: Calendar.MONDAY=2 -> 1, TUESDAY=3 -> 2, ..., SUNDAY=1 -> 7
             val normalizedDay = if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
 
             if (medication.customDaysOfWeek.contains(normalizedDay) && reminderTime.after(now)) {
@@ -163,7 +155,6 @@ object MedicationReminderScheduler {
         val now = Calendar.getInstance()
         val reminderTime = startTime.clone() as Calendar
 
-        // Jeśli czas minął dzisiaj, dodaj interwał dni
         if (reminderTime.before(now) || reminderTime == now) {
             reminderTime.add(Calendar.DAY_OF_MONTH, medication.customIntervalDays)
         }
@@ -211,7 +202,6 @@ object MedicationReminderScheduler {
                         pendingIntent
                     )
                 } else {
-                    // Fallback dla urządzeń bez pozwolenia na dokładne alarmy
                     alarmManager.setAndAllowWhileIdle(
                         AlarmManager.RTC_WAKEUP,
                         triggerTimeMillis,
@@ -226,7 +216,6 @@ object MedicationReminderScheduler {
                 )
             }
         } catch (e: SecurityException) {
-            // Fallback jeśli brak uprawnień
             e.printStackTrace()
             alarmManager.set(
                 AlarmManager.RTC_WAKEUP,
@@ -237,16 +226,14 @@ object MedicationReminderScheduler {
     }
 
     private fun generateRequestCode(medicationId: String, timeIndex: Int, frequencyType: Int): Int {
-        // Generuj unikalny request code dla każdego alarmu
         return (medicationId.hashCode() + timeIndex * 1000 + frequencyType * 100)
     }
 
     fun cancelMedicationReminders(context: Context, medicationId: String) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        // Anuluj wszystkie możliwe alarmy dla tego leku
         for (timeIndex in 0..10) {
-            for (frequencyType in 0..4) { // 5 typów częstotliwości (0-4)
+            for (frequencyType in 0..4) {
                 val requestCode = generateRequestCode(medicationId, timeIndex, frequencyType)
 
                 val intent = Intent(context, MedicationAlarmReceiver::class.java)

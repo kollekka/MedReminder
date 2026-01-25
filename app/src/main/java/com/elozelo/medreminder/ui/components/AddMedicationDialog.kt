@@ -170,7 +170,6 @@ fun AddMedicationDialog(
                     )
                 }
 
-                // Zapas początkowy
                 OutlinedTextField(
                     value = initialStock,
                     onValueChange = {
@@ -191,7 +190,6 @@ fun AddMedicationDialog(
                     singleLine = true
                 )
 
-                // Częstotliwość
                 var freqExpanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(
                     expanded = freqExpanded,
@@ -248,7 +246,6 @@ fun AddMedicationDialog(
                         7 to stringResource(R.string.day_sunday)
                     )
 
-                    // Pierwszy wiersz: Pon - Czw
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -267,8 +264,6 @@ fun AddMedicationDialog(
                             )
                         }
                     }
-
-                    // Drugi wiersz: Pt - Ndz
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -288,8 +283,6 @@ fun AddMedicationDialog(
                         }
                     }
                 }
-
-                // Opcje dla co X dni
                 if (frequency == frequencyUnit.EVERY_X_DAYS) {
                     OutlinedTextField(
                         value = customIntervalDays,
@@ -307,8 +300,6 @@ fun AddMedicationDialog(
                         supportingText = { Text("1-365") }
                     )
                 }
-
-                // Data zakończenia
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -345,8 +336,6 @@ fun AddMedicationDialog(
                 }
 
                 Divider()
-
-                // Przypomnienia
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -366,7 +355,6 @@ fun AddMedicationDialog(
                 }
 
                 if (reminderEnabled) {
-                    // Lista godzin przypomnień
                     if (reminderTimes.isNotEmpty()) {
                         reminderTimes.forEachIndexed { index, time ->
                             Card(
@@ -394,7 +382,6 @@ fun AddMedicationDialog(
                         }
                     }
 
-                    // Przycisk dodawania godziny
                     FilledTonalButton(
                         onClick = { showTimePicker = true },
                         modifier = Modifier.fillMaxWidth()
@@ -407,7 +394,6 @@ fun AddMedicationDialog(
 
                 Divider()
 
-                // Notatki
                 OutlinedTextField(
                     value = notes,
                     onValueChange = {
@@ -433,7 +419,7 @@ fun AddMedicationDialog(
         confirmButton = {
             FilledTonalButton(
                 onClick = {
-                    // Walidacja
+
                     var hasError = false
                     if (name.isBlank()) {
                         nameError = true
@@ -490,8 +476,6 @@ fun AddMedicationDialog(
             }
         }
     )
-
-    // Date Pickers
     if (showStartDatePicker) {
         DatePickerDialog(
             onDismiss = { showStartDatePicker = false },
@@ -507,8 +491,6 @@ fun AddMedicationDialog(
             initialDate = endDate?.time ?: Date().time
         )
     }
-
-    // Time Picker
     if (showTimePicker) {
         TimePickerDialog(
             onDismiss = { showTimePicker = false },

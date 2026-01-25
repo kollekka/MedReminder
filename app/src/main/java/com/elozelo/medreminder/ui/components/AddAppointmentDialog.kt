@@ -96,7 +96,6 @@ fun AddAppointmentDialog(
 
                 HorizontalDivider()
 
-                // Data i godzina
                 OutlinedCard(
                     onClick = { showDatePicker = true },
                     modifier = Modifier.fillMaxWidth(),

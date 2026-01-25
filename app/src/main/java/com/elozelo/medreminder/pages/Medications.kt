@@ -46,14 +46,12 @@ fun MedicationsPage(
     var showEmpty by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
-    // Filtrowanie i sortowanie leków
+
     val filteredMedications = remember(medications, showEmpty, searchQuery) {
         val baseList = if (showEmpty) {
-            // Puste - leki ze stanem 0, sortowane alfabetycznie
             medications.filter { it.remainingQuantity == 0 }
                 .sortedBy { it.name.lowercase() }
         } else {
-            // Aktualne - leki z zapasem, sortowane po najbliższej przyszłej godzinie przypomnienia
             val calendar = Calendar.getInstance()
             val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
             val currentMinute = calendar.get(Calendar.MINUTE)
@@ -65,8 +63,6 @@ fun MedicationsPage(
                         return@sortedBy Int.MAX_VALUE
                     }
 
-                    // Jeśli jest lastTakenTime, znajdź następną godzinę po niej
-                    // W przeciwnym razie znajdź następną godzinę po aktualnym czasie
                     val lastTakenMinutes = med.lastTakenTime?.let { timeString ->
                         val parts = timeString.split(":")
                         if (parts.size == 2) {
@@ -78,7 +74,6 @@ fun MedicationsPage(
 
                     val referenceTime = lastTakenMinutes ?: currentTimeInMinutes
 
-                    // Znajdź najbliższą przyszłą godzinę
                     val nextReminderTime = med.reminderTimes
                         .mapNotNull { timeString ->
                             val parts = timeString.split(":")
@@ -88,25 +83,22 @@ fun MedicationsPage(
                                 hour * 60 + minute
                             } else null
                         }
-                        .filter { it > referenceTime } // Tylko godziny po ostatnim wzięciu/aktualnym czasie
+                        .filter { it > referenceTime }
                         .minOrNull()
 
-                    // Jeśli jest przyszła godzina dzisiaj, użyj jej
-                    // Jeśli nie, użyj pierwszej godziny z jutrzejszego dnia (dodaj 24h)
                     nextReminderTime ?: (med.reminderTimes
                         .mapNotNull { timeString ->
                             val parts = timeString.split(":")
                             if (parts.size == 2) {
                                 val hour = parts[0].toIntOrNull() ?: return@mapNotNull null
                                 val minute = parts[1].toIntOrNull() ?: return@mapNotNull null
-                                hour * 60 + minute + (24 * 60) // Dodaj 24h
+                                hour * 60 + minute + (24 * 60)
                             } else null
                         }
                         .minOrNull() ?: Int.MAX_VALUE)
                 }
         }
 
-        // Filtrowanie po wyszukiwaniu
         if (searchQuery.isBlank()) {
             baseList
         } else {
@@ -135,7 +127,6 @@ fun MedicationsPage(
                     fontWeight = FontWeight.Bold
                 )
 
-                // Przycisk Puste/Aktualne
                 OutlinedButton(
                     onClick = { showEmpty = !showEmpty },
                     colors = ButtonDefaults.outlinedButtonColors(
@@ -152,7 +143,6 @@ fun MedicationsPage(
                 }
             }
 
-            // Pole wyszukiwania
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -270,16 +260,14 @@ private fun MedicationItem(
 ) {
     val context = LocalContext.current
 
-    // Low stock gdy zostały 2 lub mniej dawki
+
     val dosesRemaining = if (medication.quantity > 0) {
         medication.remainingQuantity / medication.quantity
     } else 0
     val isLowStock = dosesRemaining <= 2 && medication.remainingQuantity > 0
 
-    // Lokalny licznik wzięć w tej sesji (resetowany przy zmianie medication.id)
     var localTakenCount by remember(medication.id) { mutableStateOf(0) }
 
-    // Sprawdź czy lek był już dzisiaj wzięty
     val calendar = Calendar.getInstance()
     val today = String.format(
         "%04d-%02d-%02d",
@@ -289,19 +277,15 @@ private fun MedicationItem(
     )
     val alreadyTakenToday = medication.lastTakenDate == today && medication.dailyTakenCount > 0
 
-    // Stan dialogów
     var showAlreadyTakenWarningDialog by remember { mutableStateOf(false) }
     var showConfirmTakeDialog by remember { mutableStateOf(false) }
     var showEmptyMedicationDialog by remember { mutableStateOf(false) }
-
-    // Kolor paska bocznego zależny od stanu
     val accentColor = when {
         isLowStock -> MaterialTheme.colorScheme.error
         isEmpty -> MaterialTheme.colorScheme.outline
         else -> MaterialTheme.colorScheme.primary
     }
 
-    // Stan rozwinięcia karty
     var isExpanded by remember { mutableStateOf(false) }
 
     Card(
@@ -311,7 +295,6 @@ private fun MedicationItem(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row {
-            // Kolorowy pasek boczny
             Box(
                 modifier = Modifier
                     .width(4.dp)
@@ -324,7 +307,6 @@ private fun MedicationItem(
             )
 
             Column(modifier = Modifier.weight(1f)) {
-                // Nagłówek - klikalny do zwijania/rozwijania
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -353,13 +335,10 @@ private fun MedicationItem(
                             )
                         }
                     }
-
-                    // Ikony po prawej stronie
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Ikona powiadomień (klikalny dzwonek)
                         var showDisableDialog by remember { mutableStateOf(false) }
 
                         IconButton(
@@ -382,16 +361,12 @@ private fun MedicationItem(
                                 modifier = Modifier.size(20.dp)
                             )
                         }
-
-                        // Ikona strzałki
                         Icon(
                             imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             contentDescription = if (isExpanded) stringResource(R.string.collapse) else stringResource(R.string.expand),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(24.dp)
                         )
-
-                        // Dialog potwierdzenia
                         if (showDisableDialog) {
                             AlertDialog(
                                 onDismissRequest = { showDisableDialog = false },
@@ -433,8 +408,6 @@ private fun MedicationItem(
                         }
                     }
                 }
-
-                // Sekcja środkowa - zwijalna, klikalna do edycji
                 AnimatedVisibility(visible = isExpanded) {
                     Column {
                         HorizontalDivider(
@@ -449,7 +422,6 @@ private fun MedicationItem(
                                 .padding(16.dp),
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            // Lewa kolumna - informacje
                             Column(
                                 modifier = Modifier.weight(1f),
                                 verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -460,8 +432,6 @@ private fun MedicationItem(
                                     text = "${medication.quantity} ${medication.dosage.getLocalizedName(context)}",
                                     color = MaterialTheme.colorScheme.primary
                                 )
-
-                                // Stan magazynowy
                                 if (medication.initialQuantity > 0) {
                                     InfoRow(
                                         icon = Icons.Default.Inventory,
@@ -469,8 +439,6 @@ private fun MedicationItem(
                                         color = if (isLowStock) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-
-                                // Częstotliwość
                                 val frequencyText = when (medication.frequency) {
                                     frequencyUnit.SPECIFIC_DAYS -> {
                                         val dayNames = medication.customDaysOfWeek.map { dayNum ->
@@ -498,7 +466,6 @@ private fun MedicationItem(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
 
-                                // Data końcowa
                                 medication.endDate?.let {
                                     InfoRow(
                                         icon = Icons.Default.CalendarToday,
@@ -507,7 +474,6 @@ private fun MedicationItem(
                                     )
                                 }
 
-                                // Godziny przypomnień
                                 if (medication.reminderTimes.isNotEmpty()) {
                                     InfoRow(
                                         icon = Icons.Default.Alarm,
@@ -517,7 +483,6 @@ private fun MedicationItem(
                                 }
                             }
 
-                            // Prawa strona - notatki
                             if (!medication.notes.isNullOrBlank()) {
                                 var showNotesDialog by remember { mutableStateOf(false) }
 
@@ -558,7 +523,6 @@ private fun MedicationItem(
                             color = MaterialTheme.colorScheme.outlineVariant
                         )
 
-                        // Przyciski akcji - stopka
                         var showDeleteDialog by remember { mutableStateOf(false) }
 
                         Row(
@@ -602,7 +566,6 @@ private fun MedicationItem(
                             }
                         }
 
-                        // Dialog potwierdzenia usunięcia
                         if (showDeleteDialog) {
                             AlertDialog(
                                 onDismissRequest = { showDeleteDialog = false },
@@ -656,7 +619,6 @@ private fun MedicationItem(
         }
     }
 
-    // Dialog standardowy - potwierdzenie wzięcia leku
     if (showConfirmTakeDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmTakeDialog = false },
@@ -710,9 +672,7 @@ private fun MedicationItem(
                         onClick = {
 
                             val effectiveRemainingPieces = medication.remainingQuantity - (localTakenCount * medication.quantity)
-                            // Ile SZTUK zostanie po tej dawce
                             val remainingAfterTaking = effectiveRemainingPieces - medication.quantity
-                            // Ostatnia dawka = po tej dawce nie zostanie ani jedna sztuka
                             val willBeEmpty = remainingAfterTaking <= 0
 
                             localTakenCount++
@@ -733,8 +693,6 @@ private fun MedicationItem(
             }
         )
     }
-
-    // Dialog ostrzegawczy - lek już dzisiaj wzięty
     if (showAlreadyTakenWarningDialog) {
         AlertDialog(
             onDismissRequest = { showAlreadyTakenWarningDialog = false },
@@ -808,8 +766,6 @@ private fun MedicationItem(
             }
         )
     }
-
-    // Dialog - lek się skończył
     if (showEmptyMedicationDialog) {
         AlertDialog(
             onDismissRequest = { showEmptyMedicationDialog = false },
